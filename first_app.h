@@ -24,8 +24,8 @@
 namespace tve {
 	class FirstApp {
 	public:
-		static constexpr int WIDTH = 1280;
-		static constexpr int HEIGHT = 720;
+		static constexpr int WIDTH = 1600;
+		static constexpr int HEIGHT = 1200;
 
 		FirstApp();
 		~FirstApp();
@@ -42,6 +42,14 @@ namespace tve {
 		void createCommandBuffers();
 		void drawFrame();
 
+		//recursive func to render sierpinski's triangle
+		void sierpinski(
+			std::vector<TveModel::Vertex>& vertices,
+			int depth,
+			glm::vec2 left,
+			glm::vec2 right,
+			glm::vec2 top);
+
 		TveWindow tveWindow{ WIDTH, HEIGHT, "Hello Vulkan!" };
 		TveDevice tveDevice{ tveWindow };
 		TveSwapChain tveSwapChain{ tveDevice, tveWindow.getExtent() };
@@ -51,4 +59,4 @@ namespace tve {
 		std::unique_ptr<TveModel> tveModel;
 		
 	};
-} //namespace tve
+} // namespace tve

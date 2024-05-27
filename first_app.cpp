@@ -27,12 +27,15 @@ namespace tve {
 	}
 
 	void FirstApp::loadModels() {
-		std::vector<TveModel::Vertex> vertices{
+		/*std::vector<TveModel::Vertex> vertices{
 			{{0.0f, -0.5f}},
 			{{0.5f, 0.5f}},
 			{{-0.5f, 0.5f}}
 		};
 
+		tveModel = std::make_unique<TveModel>(tveDevice, vertices);*/
+		std::vector<TveModel::Vertex> vertices{};
+		sierpinski(vertices, 5, { -0.5f, 0.5f }, { 0.5f, 0.5f }, { 0.0f, -0.5f });
 		tveModel = std::make_unique<TveModel>(tveDevice, vertices);
 	}
 
@@ -129,6 +132,27 @@ namespace tve {
 		result = tveSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
 		if (result != VK_SUCCESS) {
 			throw std::runtime_error("Failed to present swap chain image!");
+		}
+	}
+
+	void FirstApp::sierpinski(
+		std::vector<TveModel::Vertex>& vertices,
+		int depth,
+		glm::vec2 left,
+		glm::vec2 right,
+		glm::vec2 top) {
+		if (depth <= 0) {
+			vertices.push_back({ top });
+			vertices.push_back({ right });
+			vertices.push_back({ left });
+		}
+		else {
+			auto leftTop = 0.5f * (left + top);
+			auto rightTop = 0.5f * (right + top);
+			auto leftRight = 0.5f * (left + right);
+			sierpinski(vertices, depth - 1, left, leftRight, leftTop);
+			sierpinski(vertices, depth - 1, leftRight, right, rightTop);
+			sierpinski(vertices, depth - 1, leftTop, rightTop, top);
 		}
 	}
 
