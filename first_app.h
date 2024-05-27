@@ -1,9 +1,21 @@
+/*
+	
+	Renders a simple triangle on screen.
+	
+	Creates command buffers to submit commands to which then get passed on to the device queue
+	to get executed.
+
+	- Command buffers allow a sequence of commands to be recorded once and reused.
+
+*/
+
 #pragma once
 
 #include "tve_window.h"
 #include "tve_pipeline.h"
 #include "tve_device.h"
 #include "tve_swap_chain.h"
+#include "tve_model.h"
 
 #include <memory>
 #include <vector>
@@ -24,7 +36,7 @@ namespace tve {
 		void run();
 
 	private:
-
+		void loadModels();
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
@@ -36,6 +48,7 @@ namespace tve {
 		std::unique_ptr<TvePipeline> tvePipeline;
 		VkPipelineLayout pipelineLayout;
 		std::vector<VkCommandBuffer> commandBuffers;
+		std::unique_ptr<TveModel> tveModel;
 		
 	};
 } //namespace tve

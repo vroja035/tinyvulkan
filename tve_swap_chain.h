@@ -1,12 +1,19 @@
 /*
 
     Swap Chain: Series of framebuffers used to display images to our window
-        - Uses at least two buffers at once (font -> displayed, back -> rendered to)
+        - Uses at least two buffers at once or double buffering 
+          (font -> displayed, back -> rendered to)
         - Coordinates with display to swap buffers prior to V-sync
             - V-sync -> moment at which displays begin drawing new image -> tied to refresh rate
-            - eg. 60hz, 60 times per second V-sync occurs and buffers are swpaed
+            - eg. 60hz, 60 times per second V-sync occurs and buffers are swpaped
             - No V-sync -> tearing -> shows info from multiple frames in a single screen draw
-            - Double vs Triple buffering
+        - Double vs Triple buffering
+            - Double buffering
+                - GPU idles until next Vsync and frame buffer swap -> fixed with an extra buffer
+                  (triple buffering) but utilizes more memory
+            - Triple buffering
+                - Always provides GPU with a frame buffer to work on
+            - GSYNC tackles this by changing behavior and not making display wait entire period
 
     Present Modes Comparison
     - FIFO
@@ -18,7 +25,7 @@
     - Mailbox
         + Low latency
         - Not always supported
-        - High power consumption
+        - High power consumption since GPU doesn't idle
 
     - Immediate
          + Low Latency
@@ -26,6 +33,8 @@
          - High power consumption
          - Tearing
 
+    RenderPass
+        - Describes structure and format of frame buffer obj and attachments
 */
 
 #pragma once

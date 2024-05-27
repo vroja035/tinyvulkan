@@ -1,3 +1,21 @@
+/*
+
+    Checks for suitable GPU that supports Vulkan features.
+    
+    Sets up validation layers for error handling.
+        - Checking the values of parameters against the specification to detect misuse
+        - Tracking creation and destruction of objects to find resource leaks
+        - Checking thread safety by tracking the threads that calls originate from
+        - Logging every call and its parameters to the standard output
+        - Tracing Vulkan calls for profiling and replaying
+
+    Checks for the needed queue families to submit commands.
+
+    Sets up logical device to interface our physical GPU alongside its queues.
+
+*/
+
+
 #pragma once
 
 #include "tve_window.h"
@@ -52,6 +70,8 @@ namespace tve {
             const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
         // Buffer Helper Functions
+
+        //takes buffer size, usage, and properties as args to return a buffer and its memory
         void createBuffer(
             VkDeviceSize size,
             VkBufferUsageFlags usage,

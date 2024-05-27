@@ -1,5 +1,7 @@
 #include "tve_pipeline.h"
 
+#include "tve_model.h"
+
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
@@ -49,9 +51,9 @@ namespace tve {
 		assert(
 			configInfo.renderPass != VK_NULL_HANDLE &&
 			"Cannot create graphics pipeline: no renderPass provided in configInfo");
-
-		auto vertCode = readFile(vertFilepath);
-		auto fragCode = readFile(fragFilepath);
+		
+		std::vector<char> vertCode = readFile(vertFilepath);
+		std::vector<char> fragCode = readFile(fragFilepath);
 
 		createShaderModule(vertCode, &vertShaderModule);
 		createShaderModule(fragCode, &fragShaderModule);
@@ -72,12 +74,20 @@ namespace tve {
 		shaderStages[1].pNext = nullptr;
 		shaderStages[1].pSpecializationInfo = nullptr;
 
+
+		std::vector<VkVertexInputBindingDescription> bindingDescriptions = 
+			TveModel::Vertex::getBindingDescriptions();
+		std::vector<VkVertexInputAttributeDescription> attributesDescriptions = 
+			TveModel::Vertex::getAttributeDescriptions();
+		
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputInfo.vertexBindingDescriptionCount = 0;
-		vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-		vertexInputInfo.pVertexBindingDescriptions = nullptr;
+		vertexInputInfo.vertexAttributeDescriptionCount = 
+			static_cast<uint32_t>(attributesDescriptions.size());
+		vertexInputInfo.vertexBindingDescriptionCount = 
+			static_cast<uint32_t>(bindingDescriptions.size());;
+		vertexInputInfo.pVertexAttributeDescriptions = attributesDescriptions.data();
+		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
 		// combines viewport and scissor
 		VkPipelineViewportStateCreateInfo viewportInfo{};

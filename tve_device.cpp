@@ -413,6 +413,8 @@ namespace tve {
         VkMemoryPropertyFlags properties,
         VkBuffer& buffer,
         VkDeviceMemory& bufferMemory) {
+        
+        //creates info struct to set properties
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
@@ -423,6 +425,7 @@ namespace tve {
             throw std::runtime_error("failed to create vertex buffer!");
         }
 
+        //query memory requires to allocate proper memory
         VkMemoryRequirements memRequirements;
         vkGetBufferMemoryRequirements(device_, buffer, &memRequirements);
 
@@ -435,6 +438,7 @@ namespace tve {
             throw std::runtime_error("failed to allocate vertex buffer memory!");
         }
 
+        //binds buffer to memory that was just allocated
         vkBindBufferMemory(device_, buffer, bufferMemory, 0);
     }
 

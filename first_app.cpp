@@ -7,6 +7,7 @@
 namespace tve {
 
 	FirstApp::FirstApp() {
+		loadModels();
 		createPipelineLayout();
 		createPipeline();
 		createCommandBuffers();
@@ -23,6 +24,16 @@ namespace tve {
 		}
 
 		vkDeviceWaitIdle(tveDevice.device());
+	}
+
+	void FirstApp::loadModels() {
+		std::vector<TveModel::Vertex> vertices{
+			{{0.0f, -0.5f}},
+			{{0.5f, 0.5f}},
+			{{-0.5f, 0.5f}}
+		};
+
+		tveModel = std::make_unique<TveModel>(tveDevice, vertices);
 	}
 
 	void FirstApp::createPipelineLayout() {
@@ -43,9 +54,10 @@ namespace tve {
 	}
 
 	void FirstApp::createPipeline() {
-	
-		auto pipelineConfig = 
+		
+		PipelineConfigInfo pipelineConfig = 
 			TvePipeline::defaultPipelineConfigInfo(tveSwapChain.width(), tveSwapChain.height());
+
 
 		pipelineConfig.renderPass = tveSwapChain.getRenderPass();
 		pipelineConfig.pipelineLayout = pipelineLayout;
@@ -61,7 +73,7 @@ namespace tve {
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; //can be submitted but cannot be called by other cmd buffers
 		allocInfo.commandPool = tveDevice.getCommandPool();
 		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
@@ -96,7 +108,8 @@ namespace tve {
 			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 			tvePipeline->bind(commandBuffers[i]);
-			vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+			tveModel->bind(commandBuffers[i]);
+			tveModel->draw(commandBuffers[i]);
 
 			vkCmdEndRenderPass(commandBuffers[i]);
 			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
@@ -108,7 +121,7 @@ namespace tve {
 	void FirstApp::drawFrame() {
 		uint32_t imageIndex;
 		
-		auto result = tveSwapChain.acquireNextImage(&imageIndex);
+		VkResult result = tveSwapChain.acquireNextImage(&imageIndex);
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
