@@ -1,4 +1,7 @@
 /*
+	
+	Veretex Shader
+	---------------
 
 	Vertex Buffer: chunk of memory that we pass to our vertex shader. need to tell graphics pipeline
 				   how it is structured
@@ -21,9 +24,27 @@
 		- offset of the attribute in bytes from the vertex start
 		- format -> describes data type of attribute
 
-	- Binding and Vertex Buffers do not need to be 1:1 can have 1 buffer w/ mult. bindings
+	- Binding and Vertex Buffers do not need to be 1:1; can have 1 buffer w/ mult. bindings
 
 	- Typically a single interleaved binding is recommended; but it depends on hardware
+
+	Fragment Shader
+	---------------
+
+	Vertex shader runs per vertex but fragment shader occurs after rasterization and runs per
+	fragment. Per vertex -> per fragment? Need to combine values throgh linear interpolation.
+
+	Can interpolate any type of value, not just position.
+
+	Simplest way of interpolating triangles -> Barycentric coordinates (handled by graphics pipeline
+	automatically)
+
+	For each fragment, the rasterizer will automatically interpolate any attributes passed down from
+	the vertex shader into the fragment shader using barycentric coordinates. Each fragment has 
+	different coordinates based on its position on the triangle.
+
+	SIMD Model - Single Instruction Multiple Data
+		- GPU able to execute same instructure on multiple input values at the same time
 
 */
 
@@ -46,6 +67,7 @@ namespace tve {
 
 		struct Vertex {
 			glm::vec2 position;
+			glm::vec3 color;
 
 			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();

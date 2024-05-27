@@ -27,16 +27,16 @@ namespace tve {
 	}
 
 	void FirstApp::loadModels() {
-		/*std::vector<TveModel::Vertex> vertices{
-			{{0.0f, -0.5f}},
-			{{0.5f, 0.5f}},
-			{{-0.5f, 0.5f}}
+		std::vector<TveModel::Vertex> vertices{
+			{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+			{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+			{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 		};
 
-		tveModel = std::make_unique<TveModel>(tveDevice, vertices);*/
-		std::vector<TveModel::Vertex> vertices{};
-		sierpinski(vertices, 5, { -0.5f, 0.5f }, { 0.5f, 0.5f }, { 0.0f, -0.5f });
 		tveModel = std::make_unique<TveModel>(tveDevice, vertices);
+		/*std::vector<TveModel::Vertex> vertices{};
+		sierpinski(vertices, 5, { -0.5f, 0.5f }, { 0.5f, 0.5f }, { 0.0f, -0.5f });
+		tveModel = std::make_unique<TveModel>(tveDevice, vertices);*/
 	}
 
 	void FirstApp::createPipelineLayout() {
