@@ -1,6 +1,7 @@
 #include "first_app.h"
 
 //std
+#include <cassert>
 #include <stdexcept>
 #include <array>
 
@@ -9,7 +10,7 @@ namespace tve {
 	FirstApp::FirstApp() {
 		loadModels();
 		createPipelineLayout();
-		createPipeline();
+		recreateSwapChain();
 		createCommandBuffers();
 	}
 
@@ -57,12 +58,14 @@ namespace tve {
 	}
 
 	void FirstApp::createPipeline() {
-		
-		PipelineConfigInfo pipelineConfig = 
-			TvePipeline::defaultPipelineConfigInfo(tveSwapChain.width(), tveSwapChain.height());
+		assert(tveSwapChain != nullptr && "Cannot create pipeline before swap chain");
+		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
+		PipelineConfigInfo pipelineConfig{};
+			
+		TvePipeline::defaultPipelineConfigInfo(pipelineConfig);
 
-		pipelineConfig.renderPass = tveSwapChain.getRenderPass();
+		pipelineConfig.renderPass = tveSwapChain->getRenderPass();
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		tvePipeline = std::make_unique<TvePipeline>(
 			tveDevice,
@@ -71,8 +74,31 @@ namespace tve {
 			pipelineConfig);
 	}
 
+	void FirstApp::recreateSwapChain() {
+		auto extent = tveWindow.getExtent();
+		while (extent.width == 0 || extent.height == 0) {
+			extent = tveWindow.getExtent();
+			glfwWaitEvents();
+		}
+
+		vkDeviceWaitIdle(tveDevice.device());
+		
+		if (tveSwapChain == nullptr) {
+			tveSwapChain = std::make_unique<TveSwapChain>(tveDevice, extent);
+		}
+		else {
+			tveSwapChain = std::make_unique<TveSwapChain>(tveDevice, extent, std::move(tveSwapChain));
+			if (tveSwapChain->imageCount() != commandBuffers.size()) {
+				freeCommandBuffers();
+				createCommandBuffers();
+			}
+		}
+		//TODO: check if renderpasses are compatible
+		createPipeline();
+	}
+
 	void FirstApp::createCommandBuffers() {
-		commandBuffers.resize(tveSwapChain.imageCount());
+		commandBuffers.resize(tveSwapChain->imageCount());
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -85,51 +111,88 @@ namespace tve {
 		{
 			throw std::runtime_error("Failed to allocate command buffers!");
 		}
+	}
 
-		for (int i = 0; i < commandBuffers.size(); i++) {
-			VkCommandBufferBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-			if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-				throw std::runtime_error("Failed to begin recoding command buffer!");
-			}
-
-			VkRenderPassBeginInfo renderPassInfo{};
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = tveSwapChain.getRenderPass();
-			renderPassInfo.framebuffer = tveSwapChain.getFrameBuffer(i);
-
-			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = tveSwapChain.getSwapChainExtent();
-
-			std::array<VkClearValue, 2> clearValues{};
-			clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			renderPassInfo.pClearValues = clearValues.data();
-
-			vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-			tvePipeline->bind(commandBuffers[i]);
-			tveModel->bind(commandBuffers[i]);
-			tveModel->draw(commandBuffers[i]);
-
-			vkCmdEndRenderPass(commandBuffers[i]);
-			if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-				throw std::runtime_error("Failed to record command buffer!");
-			}
-		}
+	void FirstApp::freeCommandBuffers() {
+		vkFreeCommandBuffers(
+			tveDevice.device(), 
+			tveDevice.getCommandPool(), 
+			static_cast<uint32_t>(commandBuffers.size()), 
+			commandBuffers.data());
+		commandBuffers.clear();
 	}
 	
+	void FirstApp::recordCommandBuffer(int imageIndex) {
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to begin recoding command buffer!");
+		}
+
+		VkRenderPassBeginInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = tveSwapChain->getRenderPass();
+		renderPassInfo.framebuffer = tveSwapChain->getFrameBuffer(imageIndex);
+
+		renderPassInfo.renderArea.offset = { 0, 0 };
+		renderPassInfo.renderArea.extent = tveSwapChain->getSwapChainExtent();
+
+		std::array<VkClearValue, 2> clearValues{};
+		clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		renderPassInfo.pClearValues = clearValues.data();
+
+		vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(tveSwapChain->getSwapChainExtent().width);
+		viewport.height = static_cast<float>(tveSwapChain->getSwapChainExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		VkRect2D scissor{ {0, 0}, tveSwapChain->getSwapChainExtent() };
+		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+
+		tvePipeline->bind(commandBuffers[imageIndex]);
+		tveModel->bind(commandBuffers[imageIndex]);
+		tveModel->draw(commandBuffers[imageIndex]);
+
+		vkCmdEndRenderPass(commandBuffers[imageIndex]);
+		if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to record command buffer!");
+		}
+	}
+
 	void FirstApp::drawFrame() {
 		uint32_t imageIndex;
 		
-		VkResult result = tveSwapChain.acquireNextImage(&imageIndex);
+		VkResult result = tveSwapChain->acquireNextImage(&imageIndex);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			recreateSwapChain();
+			return;
+		}
+
 		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("Failed to acquire swap chain image!");
 		}
 
-		result = tveSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+		recordCommandBuffer(imageIndex);
+
+		result = tveSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+		if (result == VK_ERROR_OUT_OF_POOL_MEMORY || result == VK_SUBOPTIMAL_KHR || 
+			tveWindow.hasWindowResized()) 
+		{
+			
+			tveWindow.resetWindowResizedFlag();
+			recreateSwapChain();
+			return;
+
+		}
 		if (result != VK_SUCCESS) {
 			throw std::runtime_error("Failed to present swap chain image!");
 		}

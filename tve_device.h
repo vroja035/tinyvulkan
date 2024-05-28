@@ -53,7 +53,7 @@ namespace tve {
 
         // Not copyable or movable
         TveDevice(const TveDevice&) = delete;
-        void operator=(const TveDevice&) = delete;
+        TveDevice& operator=(const TveDevice&) = delete;
         TveDevice(TveDevice&&) = delete;
         TveDevice& operator=(TveDevice&&) = delete;
 

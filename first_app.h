@@ -40,7 +40,10 @@ namespace tve {
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
+		void freeCommandBuffers();
 		void drawFrame();
+		void recreateSwapChain();
+		void recordCommandBuffer(int imageIndex);
 
 		//recursive func to render sierpinski's triangle
 		void sierpinski(
@@ -52,7 +55,7 @@ namespace tve {
 
 		TveWindow tveWindow{ WIDTH, HEIGHT, "Hello Vulkan!" };
 		TveDevice tveDevice{ tveWindow };
-		TveSwapChain tveSwapChain{ tveDevice, tveWindow.getExtent() };
+		std::unique_ptr<TveSwapChain> tveSwapChain;
 		std::unique_ptr<TvePipeline> tvePipeline;
 		VkPipelineLayout pipelineLayout;
 		std::vector<VkCommandBuffer> commandBuffers;
