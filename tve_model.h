@@ -46,6 +46,21 @@
 	SIMD Model - Single Instruction Multiple Data
 		- GPU able to execute same instructure on multiple input values at the same time
 
+	Push Constant
+	-------------
+
+	Way to pass small amounts of constant data to shader via command buffer. (eg. color, offset)
+
+	Easy to draw multiples copies of the same object.
+
+	Downside: Limited size 128bytes of memory for all stages
+
+	-stage flags: specifies what shader stages will have access to it
+	-offset
+	-size
+
+	Alignment requirements for objects.
+
 */
 
 #pragma once
