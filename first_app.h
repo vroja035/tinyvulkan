@@ -11,12 +11,13 @@
 
 #pragma once
 
-#include "tve_window.h"
-#include "tve_pipeline.h"
 #include "tve_device.h"
+#include "tve_game_object.h"
+#include "tve_pipeline.h"
 #include "tve_swap_chain.h"
-#include "tve_model.h"
+#include "tve_window.h"
 
+//std
 #include <memory>
 #include <vector>
 
@@ -36,7 +37,7 @@ namespace tve {
 		void run();
 
 	private:
-		void loadModels();
+		void loadGameObjects();
 		void createPipelineLayout();
 		void createPipeline();
 		void createCommandBuffers();
@@ -44,6 +45,7 @@ namespace tve {
 		void drawFrame();
 		void recreateSwapChain();
 		void recordCommandBuffer(int imageIndex);
+		void renderGameObjects(VkCommandBuffer commandBuffer);
 
 		//recursive func to render sierpinski's triangle
 		void sierpinski(
@@ -59,7 +61,7 @@ namespace tve {
 		std::unique_ptr<TvePipeline> tvePipeline;
 		VkPipelineLayout pipelineLayout;
 		std::vector<VkCommandBuffer> commandBuffers;
-		std::unique_ptr<TveModel> tveModel;
+		std::vector<TveGameObject> gameObjects;
 		
 	};
 } // namespace tve

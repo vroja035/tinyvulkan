@@ -51,15 +51,19 @@
 
 	Way to pass small amounts of constant data to shader via command buffer. (eg. color, offset)
 
-	Easy to draw multiples copies of the same object.
+	Easy and perfomant way to pass dynamic data to a shader.
 
-	Downside: Limited size 128bytes of memory for all stages
+	+Quick to implement
+	+High performance for frequently updating data
+	-Limited size 128bytes of memory for all stages
 
 	-stage flags: specifies what shader stages will have access to it
 	-offset
 	-size
 
 	Alignment requirements for objects.
+
+	Common use: storing a transformation matrix
 
 */
 
