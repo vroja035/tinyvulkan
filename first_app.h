@@ -13,8 +13,7 @@
 
 #include "tve_device.h"
 #include "tve_game_object.h"
-#include "tve_pipeline.h"
-#include "tve_swap_chain.h"
+#include "tve_renderer.h"
 #include "tve_window.h"
 
 //std
@@ -38,29 +37,11 @@ namespace tve {
 
 	private:
 		void loadGameObjects();
-		void createPipelineLayout();
-		void createPipeline();
-		void createCommandBuffers();
-		void freeCommandBuffers();
-		void drawFrame();
-		void recreateSwapChain();
-		void recordCommandBuffer(int imageIndex);
-		void renderGameObjects(VkCommandBuffer commandBuffer);
-
-		//recursive func to render sierpinski's triangle
-		void sierpinski(
-			std::vector<TveModel::Vertex>& vertices,
-			int depth,
-			glm::vec2 left,
-			glm::vec2 right,
-			glm::vec2 top);
 
 		TveWindow tveWindow{ WIDTH, HEIGHT, "Hello Vulkan!" };
 		TveDevice tveDevice{ tveWindow };
-		std::unique_ptr<TveSwapChain> tveSwapChain;
-		std::unique_ptr<TvePipeline> tvePipeline;
-		VkPipelineLayout pipelineLayout;
-		std::vector<VkCommandBuffer> commandBuffers;
+		TveRenderer tveRenderer{ tveWindow, tveDevice };
+
 		std::vector<TveGameObject> gameObjects;
 		
 	};
