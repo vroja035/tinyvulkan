@@ -5,6 +5,7 @@
 	to get executed.
 
 	- Command buffers allow a sequence of commands to be recorded once and reused.
+
 */
 #pragma once
 
@@ -29,6 +30,7 @@ namespace tve {
 		TveRenderer& operator = (const TveRenderer&) = delete;
 
 		VkRenderPass getSwapChainRenderPass() const { return tveSwapChain->getRenderPass(); }
+		float getAspectRatio() const { return tveSwapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; }
 
 		VkCommandBuffer getCurrentCommandBuffer() const {

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "tve_camera.h"
 #include "tve_device.h"
 #include "tve_game_object.h"
 #include "tve_pipeline.h"
@@ -28,7 +29,10 @@ namespace tve {
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 		SimpleRenderSystem& operator = (const SimpleRenderSystem&) = delete;
 
-		void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<TveGameObject>& gameObjects);
+		void renderGameObjects(
+			VkCommandBuffer commandBuffer, 
+			std::vector<TveGameObject>& gameObjects, 
+			const TveCamera& camera);
 
 	private:
 		void createPipelineLayout();

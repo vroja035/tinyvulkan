@@ -1,5 +1,6 @@
 #include "first_app.h"
 
+#include "tve_camera.h"
 #include "simple_render_system.h"
 
 #define GLM_FORCE_RADIANS
@@ -22,13 +23,18 @@ namespace tve {
 
 	void FirstApp::run() {
 		SimpleRenderSystem simpleRenderSystem{ tveDevice, tveRenderer.getSwapChainRenderPass() };
+        TveCamera camera{};
 
 		while (!tveWindow.shouldClose()) {
 			glfwPollEvents();
+
+            float aspect = tveRenderer.getAspectRatio();
+            //camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+            camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			
 			if (auto commandBuffer = tveRenderer.beginFrame()) {
 				tveRenderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects);
+				simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
 				tveRenderer.endSwapChainRenderPass(commandBuffer);
 				tveRenderer.endFrame();
 			}
@@ -100,7 +106,7 @@ namespace tve {
 
         auto cube = TveGameObject::createGameObject();
         cube.model = tveModel;
-        cube.transform.translation = { .0f, .0f, .5f };
+        cube.transform.translation = { .0f, .0f, 2.5f };
         cube.transform.scale = { .5f, .5f, .5f };
         gameObjects.push_back(std::move(cube));
 	}
