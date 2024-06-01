@@ -1,3 +1,11 @@
+/*
+	Manages pipeline and pipeline layout, and rendering game objects.
+
+	Can have multiple rendering systems.
+
+	Not all game objects are compatible with all systems.
+*/
+
 #pragma once
 
 #include "tve_device.h"

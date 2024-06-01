@@ -1,11 +1,6 @@
 /*
 	
 	Renders a simple triangle on screen.
-	
-	Creates command buffers to submit commands to which then get passed on to the device queue
-	to get executed.
-
-	- Command buffers allow a sequence of commands to be recorded once and reused.
 
 */
 
@@ -38,7 +33,7 @@ namespace tve {
 	private:
 		void loadGameObjects();
 
-		TveWindow tveWindow{ WIDTH, HEIGHT, "Hello Vulkan!" };
+		TveWindow tveWindow{ WIDTH, HEIGHT, "tinyvulkan" };
 		TveDevice tveDevice{ tveWindow };
 		TveRenderer tveRenderer{ tveWindow, tveDevice };
 

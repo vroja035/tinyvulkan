@@ -1,3 +1,11 @@
+/*
+	Manages swapchain, command buffer cycles, and drawing frames.
+
+	Creates command buffers to submit commands to which then get passed on to the device queue
+	to get executed.
+
+	- Command buffers allow a sequence of commands to be recorded once and reused.
+*/
 #pragma once
 
 #include "tve_device.h"

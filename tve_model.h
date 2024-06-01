@@ -65,6 +65,22 @@
 
 	Common use: storing a transformation matrix
 
+	---------------
+	represent translation transformation in matrix form; origin must remain at 0
+	cannot represent a tx,ty translation using 2x2 matrix, increase by 1, use 3x3 matrix
+	fixed third row copies 1 from pos vector into transofrmed res
+	2D Affine Transformation --> Homogenous Coordinate
+
+	relative offsets/distances are affected by linear transformations
+	relative offsets/distances are not affected by translations
+
+	encoding any vector that is not a pos w/ 0 as third component
+
+	In 3 dimentions;
+	add a 4th homogenous coordinate, 4x4
+
+	viewing volume : only what is inside the viewing volume is displayed
+
 */
 
 #pragma once
@@ -85,7 +101,7 @@ namespace tve {
 	public:
 
 		struct Vertex {
-			glm::vec2 position;
+			glm::vec3 position;
 			glm::vec3 color;
 
 			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
