@@ -31,6 +31,11 @@
 	4x4 matrix that when applied to a position vector, the resulting x and y values equal the projected Xs and Ys coordinates on the viewing plane.
 	
 	Perspective transform -> orthographic transform -> Perspective Projection Matrix
+
+	Camera transformation allows us to view the world from any view point and orientation.
+	translate "camera" to rigin
+	rotate "camera" to point in +z directionn
+	mcam = rotate x translate
 */
 
 
@@ -49,16 +54,37 @@ namespace tve {
 			float top, 
 			float bottomn,
 			float near, 
-			float far);
+			float far
+		);
 
 		void setPerspectiveProjection(
 			float fovy,
 			float aspect,
 			float near,
-			float far);
+			float far
+		);
+
+		void setViewDirection(
+			glm::vec3 position,
+			glm::vec3 direction,
+			glm::vec3 up = glm::vec3{ 0.f, -1.f, 0.f }
+		);
+
+		void setViewTarget(
+			glm::vec3 position,
+			glm::vec3 target,
+			glm::vec3 up = glm::vec3{ 0.f, -1.f, 0.f }
+		);
+
+		void setViewYXZ(
+			glm::vec3 position,
+			glm::vec3 rotation
+		);
 
 		const glm::mat4& getProjection() const { return projectionMatrix; }
+		const glm::mat4& getView() const { return viewMatrix; }
 	private:
 		glm::mat4 projectionMatrix{ 1.f };
+		glm::mat4 viewMatrix{ 1.f };
 	};
 }
