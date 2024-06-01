@@ -81,6 +81,9 @@
 
 	viewing volume : only what is inside the viewing volume is displayed
 
+	Index Buffer: additional data that tells GPU how to combine vertices to make up triangles
+	arr of pointers into vertex buffer
+
 */
 
 #pragma once
@@ -108,7 +111,12 @@ namespace tve {
 			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 		};
 
-		TveModel(TveDevice &device, const std::vector<Vertex>& vertices);
+		struct Builder {
+			std::vector<Vertex> vertices{};
+			std::vector<uint32_t> indices{};
+		};
+
+		TveModel(TveDevice &device, const TveModel::Builder& builder);
 		~TveModel();
 
 		TveModel(const TveModel&) = delete;
@@ -119,11 +127,18 @@ namespace tve {
 
 	private:
 		void createVertexBuffers(const std::vector<Vertex> &vertices);
+		void createIndexBuffers(const std::vector<uint32_t>& indices);
 
 		TveDevice& tveDevice;
+
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
 		uint32_t vertexCount;
+
+		bool hasIndexBuffer = false;
+		VkBuffer indexBuffer;
+		VkDeviceMemory indexBufferMemory;
+		uint32_t indexCount;
 	};
 
 }
