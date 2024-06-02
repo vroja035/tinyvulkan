@@ -93,6 +93,7 @@
 #pragma once
 
 #include "tve_device.h"
+#include "tve_buffer.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE //for vulkan
@@ -149,13 +150,11 @@ namespace tve {
 
 		TveDevice& tveDevice;
 
-		VkBuffer vertexBuffer;
-		VkDeviceMemory vertexBufferMemory;
+		std::unique_ptr<TveBuffer> vertexBuffer;
 		uint32_t vertexCount;
 
 		bool hasIndexBuffer = false;
-		VkBuffer indexBuffer;
-		VkDeviceMemory indexBufferMemory;
+		std::unique_ptr<TveBuffer> indexBuffer;
 		uint32_t indexCount;
 	};
 

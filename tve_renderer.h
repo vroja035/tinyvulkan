@@ -26,6 +26,11 @@
 
 	 Face Normals: Flat shading
 	 - Multiple normals per vertex position
+
+	 Uniform buffer: way to provide arbitrary read-only data to shaders
+		- reading can be slower
+		- reqruire additional setup (buffer + descriptor sets)
+		- binding descriptor set has some overhead
 */
 #pragma once
 

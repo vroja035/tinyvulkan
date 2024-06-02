@@ -12,6 +12,7 @@
 #include "tve_device.h"
 #include "tve_game_object.h"
 #include "tve_pipeline.h"
+#include "tve_frame_info.h"
 
 
 //std
@@ -30,9 +31,8 @@ namespace tve {
 		SimpleRenderSystem& operator = (const SimpleRenderSystem&) = delete;
 
 		void renderGameObjects(
-			VkCommandBuffer commandBuffer, 
-			std::vector<TveGameObject>& gameObjects, 
-			const TveCamera& camera);
+			FrameInfo& frameInfo, 
+			std::vector<TveGameObject>& gameObjects);
 
 	private:
 		void createPipelineLayout();

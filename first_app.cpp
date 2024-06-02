@@ -3,6 +3,7 @@
 #include "keyboard_movement_controller.h"
 #include "tve_camera.h"
 #include "simple_render_system.h"
+#include "tve_buffer.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE //for vulkan
@@ -17,6 +18,11 @@
 
 namespace tve {
 
+	struct GlobalUbo {
+		glm::mat4 projectionView{ 1.f };
+		glm::vec3 lightDirection = glm::normalize(glm::vec3{ 1.f, -3.f, -1.f });
+	};
+
 	FirstApp::FirstApp() {
 		loadGameObjects();
 	}
@@ -24,6 +30,17 @@ namespace tve {
 	FirstApp::~FirstApp() {}
 
 	void FirstApp::run() {
+
+		TveBuffer globalUboBuffer{
+			tveDevice,
+			sizeof(GlobalUbo),
+			TveSwapChain::MAX_FRAMES_IN_FLIGHT,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+			tveDevice.properties.limits.minUniformBufferOffsetAlignment,
+		};
+		globalUboBuffer.map();
+
 		SimpleRenderSystem simpleRenderSystem{ tveDevice, tveRenderer.getSwapChainRenderPass() };
         TveCamera camera{};
 
@@ -47,8 +64,24 @@ namespace tve {
             camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
 			
 			if (auto commandBuffer = tveRenderer.beginFrame()) {
+
+				int frameIndex = tveRenderer.getFrameIndex();
+				FrameInfo frameInfo{
+					frameIndex,
+					frameTime,
+					commandBuffer,
+					camera
+				};
+				
+				//	update
+				GlobalUbo ubo{};
+				ubo.projectionView = camera.getProjection() * camera.getView();
+				globalUboBuffer.writeToIndex(&ubo, frameIndex);
+				globalUboBuffer.flushIndex(frameIndex);
+
+				// render
 				tveRenderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+				simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
 				tveRenderer.endSwapChainRenderPass(commandBuffer);
 				tveRenderer.endFrame();
 			}
