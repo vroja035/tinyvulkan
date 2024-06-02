@@ -59,13 +59,25 @@ namespace tve {
 
 	void FirstApp::loadGameObjects() {
 		std::shared_ptr<TveModel> tveModel = TveModel::
-			createModelFromFile(tveDevice, "models/colored_cube.obj");
+			createModelFromFile(tveDevice, "models/smooth_vase.obj");
 
-        auto cube = TveGameObject::createGameObject();
-        cube.model = tveModel;
-        cube.transform.translation = { .0f, .0f, 2.5f };
-        cube.transform.scale = { .5f, .5f, .5f };
-        gameObjects.push_back(std::move(cube));
+        auto obj = TveGameObject::createGameObject();
+        obj.model = tveModel;
+        //obj.transform.translation = { .0f, .0f, 2.5f };
+		obj.transform.translation = { -.5f, .5f, 2.5f };
+        //obj.transform.scale = glm::vec3(2.f);
+		obj.transform.scale = {3.f, 1.5f, 3.f};
+		gameObjects.push_back(std::move(obj));
+
+		
+		tveModel = TveModel::createModelFromFile(tveDevice, "models/flat_vase.obj");
+
+		obj = TveGameObject::createGameObject();
+		obj.model = tveModel;
+		obj.transform.translation = { .5f, .5f, 2.5f };
+		//obj.transform.scale = glm::vec3(2.f);
+		obj.transform.scale = { 3.f, 1.5f, 3.f };
+		gameObjects.push_back(std::move(obj));
 	}
 
 } // namespace tve

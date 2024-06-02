@@ -84,6 +84,10 @@
 	Index Buffer: additional data that tells GPU how to combine vertices to make up triangles
 	arr of pointers into vertex buffer
 
+	To use Index Buffers with .obj files:
+		new -> add to vertex buffer and add new index to index buffer
+		existing -> find existing index value and add index to index buffer
+
 */
 
 #pragma once

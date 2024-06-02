@@ -6,6 +6,26 @@
 
 	- Command buffers allow a sequence of commands to be recorded once and reused.
 
+	Lighting model: a simplification of the Light Transport Equation used to calculate the intensity
+	of reflected light at a given point on a surface.
+
+	Diffuse Model
+		- Makes assumption that the surfrace reflects incoming light equally in all direction
+		- good for matte, non metallic surfaces; opposite of a mirror surface
+		- obey Lamberts Cosine Law : lightIntensity is proportional to cos (angle between surface normal 
+		and direction to lgith source)
+
+	Directional Lighting: uses parallel light rays
+	 - simulates lgiht source that is inf away from the object
+
+	Indirect illumination
+	- ambient lighting
+
+	Vertex Normals: Smooth shading
+	 - Normals perpendicular to "implied" curved surfaced
+
+	 Face Normals: Flat shading
+	 - Multiple normals per vertex position
 */
 #pragma once
 

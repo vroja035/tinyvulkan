@@ -14,7 +14,7 @@ namespace tve {
 
 	struct SimplePushConstantData {
 		glm::mat4 transform{ 1.f }; //init to identity matrix
-		alignas(16) glm::vec3 color;
+		glm::mat4 normalMatrix{ 1.f }; 
 	};
 
 	SimpleRenderSystem::SimpleRenderSystem(TveDevice& device, VkRenderPass renderPass) 
@@ -76,8 +76,9 @@ namespace tve {
 		for (auto& obj : gameObjects) {
 
 			SimplePushConstantData push{};
-			push.color = obj.color;
-			push.transform = projectionView * obj.transform.mat4();
+			auto modelMatrix = obj.transform.mat4();
+			push.transform = projectionView * modelMatrix;
+			push.normalMatrix = obj.transform.normalMatrix();
 
 			vkCmdPushConstants(
 				commandBuffer,
