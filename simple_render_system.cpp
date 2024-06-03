@@ -67,9 +67,7 @@ namespace tve {
 			pipelineConfig);
 	}
 
-	void SimpleRenderSystem::renderGameObjects(
-		FrameInfo& frameInfo,
-		std::vector<TveGameObject>& gameObjects) {
+	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo) {
 		tvePipeline->bind(frameInfo.commandBuffer);
 
 		vkCmdBindDescriptorSets(
@@ -83,7 +81,9 @@ namespace tve {
 			nullptr
 		);
 
-		for (auto& obj : gameObjects) {
+		for (auto& kv : frameInfo.gameObjects) {
+
+			auto& obj = kv.second;
 
 			SimplePushConstantData push{};
 			push.modelMatrix = obj.transform.mat4();

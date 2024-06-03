@@ -39,7 +39,7 @@ namespace tve {
 		TveRenderer tveRenderer{ tveWindow, tveDevice };
 
 		std::unique_ptr<TveDescriptorPool> globalPool{};
-		std::vector<TveGameObject> gameObjects;
+		TveGameObject::Map gameObjects;
 		
 	};
 } // namespace tve

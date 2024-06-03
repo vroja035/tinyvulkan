@@ -53,7 +53,7 @@ namespace tve {
 		}
 
 		auto globalSetLayout = TveDescriptorSetLayout::Builder(tveDevice)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(TveSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -95,7 +95,8 @@ namespace tve {
 					frameTime,
 					commandBuffer,
 					camera,
-					globalDescriptorSets[frameIndex]
+					globalDescriptorSets[frameIndex],
+					gameObjects
 				};
 				
 				//	update
@@ -106,7 +107,7 @@ namespace tve {
 
 				// render
 				tveRenderer.beginSwapChainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
+				simpleRenderSystem.renderGameObjects(frameInfo);
 				tveRenderer.endSwapChainRenderPass(commandBuffer);
 				tveRenderer.endFrame();
 			}
@@ -119,23 +120,23 @@ namespace tve {
 		std::shared_ptr<TveModel> tveModel = TveModel::
 			createModelFromFile(tveDevice, "models/smooth_vase.obj");
 
-        auto obj = TveGameObject::createGameObject();
-        obj.model = tveModel;
+        auto smoothVase = TveGameObject::createGameObject();
+        smoothVase.model = tveModel;
         //obj.transform.translation = { .0f, .0f, 2.5f };
-		obj.transform.translation = { -.5f, .5f, 0.f };
+		smoothVase.transform.translation = { -.5f, .5f, 0.f };
         //obj.transform.scale = glm::vec3(2.f);
-		obj.transform.scale = {3.f, 1.5f, 3.f};
-		gameObjects.push_back(std::move(obj));
+		smoothVase.transform.scale = {3.f, 1.5f, 3.f};
+		gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
 		
 		tveModel = TveModel::createModelFromFile(tveDevice, "models/flat_vase.obj");
 
-		obj = TveGameObject::createGameObject();
-		obj.model = tveModel;
-		obj.transform.translation = { .5f, .5f, 0.f };
+		auto flatVase = TveGameObject::createGameObject();
+		flatVase.model = tveModel;
+		flatVase.transform.translation = { .5f, .5f, 0.f };
 		//obj.transform.scale = glm::vec3(2.f);
-		obj.transform.scale = { 3.f, 1.5f, 3.f };
-		gameObjects.push_back(std::move(obj));
+		flatVase.transform.scale = { 3.f, 1.5f, 3.f };
+		gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
 		tveModel = TveModel::createModelFromFile(tveDevice, "models/floor.obj");
 		auto floor = TveGameObject::createGameObject();
@@ -144,7 +145,7 @@ namespace tve {
 		floor.transform.translation = { 0.f, .5f, 0.f };
 		//obj.transform.scale = glm::vec3(2.f);
 		floor.transform.scale = { 3.f, 1.f, 3.f };
-		gameObjects.push_back(std::move(floor));
+		gameObjects.emplace(floor.getId(), std::move(floor));
 	}
 
 } // namespace tve
