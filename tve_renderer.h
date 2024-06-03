@@ -31,6 +31,11 @@
 		- reading can be slower
 		- reqruire additional setup (buffer + descriptor sets)
 		- binding descriptor set has some overhead
+
+	Point lighting: relative positioning between light source and surface model matter
+	- can hit a flat surface at different angles
+	- point lights are attenuated -> intensity proportional to 1/distance^2 (further away, less light)
+		- can be controlled by constant, linear, quadratic params
 */
 #pragma once
 
