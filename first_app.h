@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "tve_descriptors.h"
 #include "tve_device.h"
 #include "tve_game_object.h"
 #include "tve_renderer.h"
@@ -37,6 +38,7 @@ namespace tve {
 		TveDevice tveDevice{ tveWindow };
 		TveRenderer tveRenderer{ tveWindow, tveDevice };
 
+		std::unique_ptr<TveDescriptorPool> globalPool{};
 		std::vector<TveGameObject> gameObjects;
 		
 	};

@@ -11,5 +11,6 @@ namespace tve {
 		float frameTime;
 		VkCommandBuffer commandBuffer;
 		TveCamera& camera;
+		VkDescriptorSet globalDescriptorSet;
 	};
 } // namespace tve
