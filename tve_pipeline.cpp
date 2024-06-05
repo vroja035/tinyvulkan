@@ -75,10 +75,8 @@ namespace tve {
 		shaderStages[1].pSpecializationInfo = nullptr;
 
 
-		std::vector<VkVertexInputBindingDescription> bindingDescriptions = 
-			TveModel::Vertex::getBindingDescriptions();
-		std::vector<VkVertexInputAttributeDescription> attributesDescriptions = 
-			TveModel::Vertex::getAttributeDescriptions();
+		auto& bindingDescriptions = configInfo.bindingDescription;
+		auto& attributesDescriptions = configInfo.attributeDescription;
 		
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -215,6 +213,9 @@ namespace tve {
 		configInfo.dynamicStateInfo.dynamicStateCount =
 			static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
 		configInfo.dynamicStateInfo.flags = 0;
+
+		configInfo.bindingDescription = TveModel::Vertex::getBindingDescriptions();
+		configInfo.attributeDescription = TveModel::Vertex::getAttributeDescriptions();
 	}
 
 } // namespace tve
