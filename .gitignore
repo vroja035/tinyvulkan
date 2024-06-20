@@ -1,0 +1,6 @@
+build/
+.vs/
+*vcxproj
+*vcxproj.*
+*.bat
+out/
