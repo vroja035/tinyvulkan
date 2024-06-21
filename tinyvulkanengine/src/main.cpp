@@ -1,3 +1,7 @@
+/*
+	Entry point for the application.
+*/
+
 #include <vk_engine.h>
 
 int main(int argc, char* argv[])
