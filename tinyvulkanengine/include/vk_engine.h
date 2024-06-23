@@ -42,6 +42,10 @@ public:
 
 	VmaAllocator _allocator;
 
+	//draw resources
+	AllocatedImage _drawImage;
+	VkExtent2D _drawExtent;
+
 	bool _isInitialized{ false };
 	int _frameNumber {0};
 	bool stop_rendering{ false };
@@ -59,6 +63,7 @@ public:
 
 	//draw loop
 	void draw();
+	void draw_background(VkCommandBuffer cmd);
 
 	//run main loop
 	void run();
