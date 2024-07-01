@@ -1,1 +1,4 @@
-﻿#pragma once
+﻿/*
+	GLTF loading logic.
+*/
+#pragma once

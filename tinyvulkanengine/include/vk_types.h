@@ -22,6 +22,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
 
+// Holds data needed for an image
 struct AllocatedImage {
     VkImage image;
     VkImageView imageView;

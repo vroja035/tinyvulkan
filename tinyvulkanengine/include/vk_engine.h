@@ -5,8 +5,10 @@
 
 #include <vk_types.h>
 
+// Handles the cleanup of objects
 struct DeletionQueue
 {
+	// Stores callback func for every object
 	std::deque<std::function<void()>> deletors;
 
 	void push_function(std::function<void()>&& function) {
@@ -23,26 +25,33 @@ struct DeletionQueue
 	}
 };
 
+// Holds structures and commands needed to draw a given frame
 struct FrameData {
-
+	// Allocator for a command buffer
 	VkCommandPool _commandPool;
+	// Records commands to be submitted to the device queue for execution
 	VkCommandBuffer _mainCommandBuffer;
+	// Used for GPU to GPU sync, link between multiple gpu queue operations
+	// _swapchainSemaphore -> render commands wait on swapchain img request
+	// _renderSemaphore -> waits for the draw commands of a given frame to be completed
 	VkSemaphore _swapchainSemaphore, _renderSemaphore;
+	// Used to sync the main loop in the CPU with the GPU
 	VkFence _renderFence;
-
+	// Deletion Queue for each frame in flight
 	DeletionQueue _deletionQueue;
 };
-
+// Double-buffering
 constexpr unsigned int FRAME_OVERLAP = 2;
 
 class VulkanEngine {
 public:
-
+	// Main deletion queue for global objects
 	DeletionQueue _mainDeletionQueue;
 
+	// VMA memory allocator object
 	VmaAllocator _allocator;
 
-	//draw resources
+	// Draw resources
 	AllocatedImage _drawImage;
 	VkExtent2D _drawExtent;
 
@@ -55,17 +64,17 @@ public:
 
 	static VulkanEngine& Get();
 
-	//initializes everything in the engine
+	// Initializes everything in the engine
 	void init();
 
-	//shuts down the engine
+	// Destroys resources in the opposite order they were created
 	void cleanup();
 
-	//draw loop
+	// Draw loop
 	void draw();
 	void draw_background(VkCommandBuffer cmd);
 
-	//run main loop
+	// Run main loop
 	void run();
 
 	VkInstance _instance;// Vulkan library handle

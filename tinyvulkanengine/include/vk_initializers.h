@@ -1,5 +1,5 @@
 ﻿/*
-    Initializers for vulkan info structs.
+    Helper functions to initialize Vulkan structs.
 */
 #pragma once
 

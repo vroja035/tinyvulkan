@@ -4,10 +4,11 @@
 
 void vkutil::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout)
 {
+	// Contains info for a given image barrier
     VkImageMemoryBarrier2 imageBarrier{ .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
     imageBarrier.pNext = nullptr;
 
-    imageBarrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+    imageBarrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT; // inefficient, stalls pipeline
     imageBarrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
     imageBarrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
     imageBarrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
@@ -26,6 +27,8 @@ void vkutil::transition_image(VkCommandBuffer cmd, VkImage image, VkImageLayout 
     depInfo.imageMemoryBarrierCount = 1;
     depInfo.pImageMemoryBarriers = &imageBarrier;
 
+	// Defines memory dependencies between commands that were submitted to the same queue before it, 
+	// and those submitted to the same queue after it.
     vkCmdPipelineBarrier2(cmd, &depInfo);
 }
 
