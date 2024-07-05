@@ -45,6 +45,23 @@ struct FrameData {
 // Double-buffering
 constexpr unsigned int FRAME_OVERLAP = 2;
 
+// Compute Shaders Push Constants
+struct ComputePushConstants {
+	glm::vec4 data1;
+	glm::vec4 data2;
+	glm::vec4 data3;
+	glm::vec4 data4;
+};
+
+struct ComputeEffect {
+	const char* name;
+
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+
+	ComputePushConstants pushConstants;
+};
+
 class VulkanEngine {
 public:
 	// Main deletion queue for global objects
@@ -105,7 +122,7 @@ public:
 	VkDescriptorSet _drawImageDescriptors;
 	VkDescriptorSetLayout _drawImageDescriptorLayout;
 
-	VkPipeline _gradientPipeline;
+	//VkPipeline _gradientPipeline;
 	VkPipelineLayout _gradientPipelineLayout;
 
 	// immediate submit structures
@@ -115,6 +132,10 @@ public:
 
 
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
+
+	// Stores an array of compute pipelines
+	std::vector<ComputeEffect> backfroundEffects;
+	int currentBackgroundEffect{ 0 };
 
 private:
 

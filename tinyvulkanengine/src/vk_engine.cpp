@@ -311,12 +311,27 @@ void VulkanEngine::init_background_pipelines()
     computeLayout.pSetLayouts = &_drawImageDescriptorLayout;
     computeLayout.setLayoutCount = 1;
 
+    // Add Push Constants to pipeline layout
+    VkPushConstantRange pushConstant{};
+    pushConstant.offset = 0;
+    pushConstant.size = sizeof(ComputePushConstants);
+    pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    computeLayout.pPushConstantRanges = &pushConstant;
+    computeLayout.pushConstantRangeCount = 1;
+
     VK_CHECK(vkCreatePipelineLayout(_device, &computeLayout, nullptr, &_gradientPipelineLayout));
 
-    // Load shader module
-    VkShaderModule computeDrawShader;
-    if (!vkutil::load_shader_module("../shaders/gradient.comp.spv", _device, &computeDrawShader))
+    // Load shader modules
+    VkShaderModule gradientShader;
+    if (!vkutil::load_shader_module("../shaders/gradient_color.comp.spv", _device, &gradientShader))
     {
+        printf("Error when building the compute shader \n");
+        assert(false);
+    }
+
+    VkShaderModule skyShader;
+    if (!vkutil::load_shader_module("../shaders/sky.comp.spv", _device, &skyShader)) {
         printf("Error when building the compute shader \n");
         assert(false);
     }
@@ -326,7 +341,7 @@ void VulkanEngine::init_background_pipelines()
     stageinfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stageinfo.pNext = nullptr;
     stageinfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    stageinfo.module = computeDrawShader;
+    stageinfo.module = gradientShader;
     stageinfo.pName = "main";
 
     // Compute pipeline info
@@ -336,14 +351,42 @@ void VulkanEngine::init_background_pipelines()
     computePipelineCreateInfo.layout = _gradientPipelineLayout;
     computePipelineCreateInfo.stage = stageinfo;
 
-    VK_CHECK(vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &_gradientPipeline));
+    // Gradient shader effect
+    ComputeEffect gradient;
+    gradient.pipelineLayout = _gradientPipelineLayout;
+    gradient.name = "gradient";
+    gradient.pushConstants = {};
+    // Gradient shader default values
+    gradient.pushConstants.data1 = glm::vec4(1, 0, 0, 1);
+    gradient.pushConstants.data2 = glm::vec4(0, 0, 1, 1);
+    // Creates gradient shader compute pipeline
+    VK_CHECK(vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &gradient.pipeline));
 
-    // Destroy shader module
-    vkDestroyShaderModule(_device, computeDrawShader, nullptr);
+    // Switch shader module to create sky shader
+    computePipelineCreateInfo.stage.module = skyShader;
 
-    _mainDeletionQueue.push_function([&]() {
+    // Sky shader effect
+    ComputeEffect sky;
+    sky.pipelineLayout = _gradientPipelineLayout;
+    sky.name = "sky";
+    sky.pushConstants = {};
+    // Sky shader default values
+    sky.pushConstants.data1 = glm::vec4(0.1, 0.2, 0.4, 0.97);
+    // Creates sky shader compute pipeline
+    VK_CHECK(vkCreateComputePipelines(_device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &sky.pipeline));
+
+    // Add the 2 background effects into the array
+    backfroundEffects.push_back(gradient);
+    backfroundEffects.push_back(sky);
+
+    // Destroy shader modules
+    vkDestroyShaderModule(_device, gradientShader, nullptr);
+    vkDestroyShaderModule(_device, skyShader, nullptr);
+
+    _mainDeletionQueue.push_function([=]() {
         vkDestroyPipelineLayout(_device, _gradientPipelineLayout, nullptr);
-        vkDestroyPipeline(_device, _gradientPipeline, nullptr);
+        vkDestroyPipeline(_device, sky.pipeline, nullptr);
+        vkDestroyPipeline(_device, gradient.pipeline, nullptr);
         });
 }
 
@@ -504,13 +547,18 @@ void VulkanEngine::draw_background(VkCommandBuffer cmd)
     //clear image
     vkCmdClearColorImage(cmd, _drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);*/
 
-    // bind the gradient drawing compute pipeline
-    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _gradientPipeline);
+    ComputeEffect& effect = backfroundEffects[currentBackgroundEffect];
 
-    // bind the descriptor set containing the draw image for the compute pipeline
+    // Bind the background compute pipeline
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, effect.pipeline);
+
+    // Bind the descriptor set containing the draw image for the compute pipeline
     vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, _gradientPipelineLayout, 0, 1, &_drawImageDescriptors, 0, nullptr);
 
-    // execute the compute pipeline dispatch. We are using 16x16 workgroup size so we need to divide by it
+    // Update the values of push constants
+    vkCmdPushConstants(cmd, _gradientPipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstants), &effect.pushConstants);
+
+    // Execute the compute pipeline dispatch. We are using 16x16 workgroup size so we need to divide by it
     vkCmdDispatch(cmd, std::ceil(_drawExtent.width / 16.0), std::ceil(_drawExtent.height / 16.0), 1);
 }
 
@@ -644,8 +692,24 @@ void VulkanEngine::run()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        //some imgui UI to test
-        ImGui::ShowDemoWindow();
+        if (ImGui::Begin("background")) {
+            // Grab selected effect
+            ComputeEffect& selected = backfroundEffects[currentBackgroundEffect];
+
+            // Set text to effect name
+            ImGui::Text("Selected effect: ", selected.name);
+
+            // Slider for the different push constants
+            ImGui::SliderInt("Effect Index", &currentBackgroundEffect, 0, backfroundEffects.size() - 1);
+ 
+            ImGui::InputFloat4("data1", reinterpret_cast<float*>(&selected.pushConstants.data1));
+            ImGui::InputFloat4("data2", reinterpret_cast<float*>(&selected.pushConstants.data2));
+            //ImGui::InputFloat4("data3", reinterpret_cast<float*>(&selected.pushConstants.data3));
+            //ImGui::InputFloat4("data4", reinterpret_cast<float*>(&selected.pushConstants.data4));
+            //ImGui::ColorEdit4("Data1", reinterpret_cast<float*>(&selected.pushConstants.data1));
+            //ImGui::ColorEdit4("Data2", reinterpret_cast<float*>(&selected.pushConstants.data2));
+        }
+        ImGui::End();
 
         //make imgui calculate internal draw structures
         ImGui::Render();
