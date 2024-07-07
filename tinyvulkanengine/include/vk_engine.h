@@ -93,6 +93,7 @@ public:
 	void draw();
 	void draw_background(VkCommandBuffer cmd);
 	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
+	void draw_geometry(VkCommandBuffer cmd);
 
 	// Run main loop
 	void run();
@@ -136,6 +137,11 @@ public:
 	// Stores an array of compute pipelines
 	std::vector<ComputeEffect> backfroundEffects;
 	int currentBackgroundEffect{ 0 };
+
+	// Triangle pipeline
+	VkPipelineLayout _trianglePipelineLayout;
+	VkPipeline _trianglePipeline;
+	void init_triangle_pipeline();
 
 private:
 
