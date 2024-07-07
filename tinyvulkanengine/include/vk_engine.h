@@ -70,6 +70,11 @@ public:
 	// VMA memory allocator object
 	VmaAllocator _allocator;
 
+	// Creates a buffer
+	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);
+	// Destroys a buffer
+	void destroy_buffer(const AllocatedBuffer& buffer);
+
 	// Draw resources
 	AllocatedImage _drawImage;
 	VkExtent2D _drawExtent;
@@ -143,6 +148,15 @@ public:
 	VkPipeline _trianglePipeline;
 	void init_triangle_pipeline();
 
+	// Creates mesh buffers and uploads them to the GPU
+	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices);
+
+	VkPipelineLayout _meshPipelineLayout;
+	VkPipeline _meshPipeline;
+
+	GPUMeshBuffers rectangle;
+
+	void init_mesh_pipeline();
 private:
 
 	void init_vulkan();
@@ -153,6 +167,7 @@ private:
 	void init_pipelines();
 	void init_background_pipelines();
 	void init_imgui();
+	void init_default_data();
 
 	void create_swapchain(uint32_t width, uint32_t height);
 	void destroy_swapchain();
