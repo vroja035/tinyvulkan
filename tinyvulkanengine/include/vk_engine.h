@@ -6,6 +6,7 @@
 #include <vk_types.h>
 
 #include "vk_descriptors.h"
+#include "vk_loader.h"
 
 // Handles the cleanup of objects
 struct DeletionQueue
@@ -77,7 +78,9 @@ public:
 
 	// Draw resources
 	AllocatedImage _drawImage;
+	AllocatedImage _depthImage;
 	VkExtent2D _drawExtent;
+	
 
 	bool _isInitialized{ false };
 	int _frameNumber {0};
@@ -157,6 +160,8 @@ public:
 	GPUMeshBuffers rectangle;
 
 	void init_mesh_pipeline();
+
+	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
 private:
 
 	void init_vulkan();
