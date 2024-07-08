@@ -1,1 +1,4 @@
-# tinyvulkanengine2
+# tinyvulkan
+
+Messing around with Vulkan!
+Following https://vkguide.dev/
