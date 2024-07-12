@@ -39,7 +39,7 @@ void VulkanEngine::init()
     // We initialize SDL and create a window with it.
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
     _window = SDL_CreateWindow(
         "Vulkan Engine",
@@ -160,6 +160,22 @@ void VulkanEngine::create_swapchain(uint32_t width, uint32_t height)
     _swapchainImageViews = vkbSwapchain.get_image_views().value();
 }
 
+void VulkanEngine::resize_swapchain()
+{
+    vkDeviceWaitIdle(_device);
+
+    destroy_swapchain();
+
+    int w, h;
+    SDL_GetWindowSize(_window, &w, &h);
+    _windowExtent.width = w;
+    _windowExtent.height = h;
+
+    create_swapchain(_windowExtent.width, _windowExtent.height);
+
+    resize_requested = false;
+}
+
 void VulkanEngine::init_swapchain()
 {
     create_swapchain(_windowExtent.width, _windowExtent.height);
@@ -168,6 +184,8 @@ void VulkanEngine::init_swapchain()
     VkExtent3D drawImageExtent = {
         _windowExtent.width,
         _windowExtent.height,
+        //1920,
+        //1080,
         1
     };
 
@@ -662,7 +680,7 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     VkRenderingAttachmentInfo colorAttachment = vkinit::attachment_info(_drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_GENERAL);
     VkRenderingAttachmentInfo depthAttachment = vkinit::depth_attachment_info(_depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-    VkRenderingInfo renderInfo = vkinit::rendering_info(_windowExtent, &colorAttachment, &depthAttachment);
+    VkRenderingInfo renderInfo = vkinit::rendering_info(/*_windowExtent*/ _drawExtent, &colorAttachment, &depthAttachment);
     vkCmdBeginRendering(cmd, &renderInfo);
 
     //vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _trianglePipeline);
@@ -722,6 +740,9 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 
 void VulkanEngine::draw()
 {
+    _drawExtent.height = std::min(_swapchainExtent.height, _drawImage.imageExtent.height) * renderScale;
+    _drawExtent.width = std::min(_swapchainExtent.width, _drawImage.imageExtent.width) * renderScale;
+
     // Wait until the gpu has finished rendering the last frame. Timeout of 1 second.
     VK_CHECK(vkWaitForFences(_device, 1, &get_current_frame()._renderFence, true, 1000000000));
 
@@ -733,7 +754,13 @@ void VulkanEngine::draw()
     
     // Request image from the swapchain
     uint32_t swapchainImageIndex;
-    VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1000000000, get_current_frame()._swapchainSemaphore, nullptr, &swapchainImageIndex));
+    
+    VkResult acquireNextImageRes = vkAcquireNextImageKHR(_device, _swapchain, 1000000000, get_current_frame()._swapchainSemaphore, nullptr, &swapchainImageIndex);
+    if (acquireNextImageRes == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        resize_requested = true;
+        return;
+    }
 
     // Naming it cmd for shorter writing
     VkCommandBuffer cmd = get_current_frame()._mainCommandBuffer;
@@ -810,7 +837,11 @@ void VulkanEngine::draw()
 
     presentInfo.pImageIndices = &swapchainImageIndex;
 
-    VK_CHECK(vkQueuePresentKHR(_graphicsQueue, &presentInfo));
+    VkResult queuePresentResult = vkQueuePresentKHR(_graphicsQueue, &presentInfo);
+    if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        resize_requested = true;
+    }
 
     // Increase the number of frames drawn
     _frameNumber++;
@@ -849,12 +880,18 @@ void VulkanEngine::run()
             continue;
         }
 
+        if (resize_requested) {
+            resize_swapchain();
+        }
+
         // imgui new frame
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
         if (ImGui::Begin("background")) {
+            ImGui::SliderFloat("Render Scale", &renderScale, 0.3f, 1.f);
+
             // Grab selected effect
             ComputeEffect& selected = backfroundEffects[currentBackgroundEffect];
 
