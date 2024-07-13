@@ -42,6 +42,8 @@ struct FrameData {
 	VkFence _renderFence;
 	// Deletion Queue for each frame in flight
 	DeletionQueue _deletionQueue;
+	// Global data descriptor for every frame
+	DescriptorAllocatorGrowable _frameDescriptors;
 };
 // Double-buffering
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -164,6 +166,11 @@ public:
 	void init_mesh_pipeline();
 
 	std::vector<std::shared_ptr<MeshAsset>> testMeshes;
+
+	// Unfiform buffer of scene data
+	GPUSceneData sceneData;
+
+	VkDescriptorSetLayout _gpuSceneDataDescriptorLayout;
 private:
 
 	void init_vulkan();
