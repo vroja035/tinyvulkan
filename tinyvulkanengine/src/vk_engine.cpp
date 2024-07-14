@@ -302,11 +302,6 @@ void VulkanEngine::init_sync_structures()
 void VulkanEngine::init_descriptors()
 {
     //create a descriptor pool that will hold 10 sets with 1 image each
-    /*std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
-    {
-        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
-    };*/
-
     std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> sizes =
     {
         { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
@@ -336,22 +331,6 @@ void VulkanEngine::init_descriptors()
 
     //allocate a descriptor set for our draw image
     _drawImageDescriptors = globalDescriptorAllocator.allocate(_device, _drawImageDescriptorLayout);
-
-    /*VkDescriptorImageInfo imgInfo{};
-    imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    imgInfo.imageView = _drawImage.imageView;
-
-    VkWriteDescriptorSet drawImageWrite = {};
-    drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    drawImageWrite.pNext = nullptr;
-
-    drawImageWrite.dstBinding = 0;
-    drawImageWrite.dstSet = _drawImageDescriptors;
-    drawImageWrite.descriptorCount = 1;
-    drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    drawImageWrite.pImageInfo = &imgInfo;
-
-    vkUpdateDescriptorSets(_device, 1, &drawImageWrite, 0, nullptr);*/
 
     DescriptorWriter writer;
     writer.write_image(0, _drawImage.imageView, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
@@ -473,73 +452,12 @@ void VulkanEngine::init_background_pipelines()
         });
 }
 
-void VulkanEngine::init_triangle_pipeline()
-{
-    // Loads triangle vertex and fragment shaders
-    VkShaderModule triangleFragShader;
-    if (!vkutil::load_shader_module("../shaders/color_triangle.frag.spv", _device, &triangleFragShader)) {
-        printf("Error when loading color_triangle.frag\n");
-    }
-    else {
-        printf("color_triangle.frag succesfully loaded\n");
-    }
-
-    VkShaderModule triangleVertexShader;
-    if (!vkutil::load_shader_module("../shaders/color_triangle.vert.spv", _device, &triangleVertexShader)) {
-        printf("Error when loading color_triangle.vert\n");
-    }
-    else {
-        printf("color_triangle.vert succesfully loaded\n");
-    }
-
-    // Build the pipeline layout that controls the inputs/outputs of the shader
-    // we are not using descriptor sets or other systems yet, so no need to use anything other than empty default
-    VkPipelineLayoutCreateInfo pipeline_layout_info = vkinit::pipeline_layout_create_info();
-    VK_CHECK(vkCreatePipelineLayout(_device, &pipeline_layout_info, nullptr, &_trianglePipelineLayout));
-
-    PipelineBuilder pipelineBuilder;
-
-    // Use the triangle layout we created
-    pipelineBuilder._pipelineLayout = _trianglePipelineLayout;
-    // Connecting the vertex and pixel shaders to the pipeline
-    pipelineBuilder.set_shaders(triangleVertexShader, triangleFragShader);
-    // It will draw triangles
-    pipelineBuilder.set_input_topology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-    // Filled triangles
-    pipelineBuilder.set_polygon_mode(VK_POLYGON_MODE_FILL);
-    // No backface culling
-    pipelineBuilder.set_cull_mode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
-    // No multisampling
-    pipelineBuilder.set_multisampling_none();
-    // No blending
-    pipelineBuilder.disable_blending();
-    // No depth testing
-    pipelineBuilder.disable_depthtest();
-
-    // Connect the image format we will draw into, from draw image
-    pipelineBuilder.set_color_attachment_format(_drawImage.imageFormat);
-    pipelineBuilder.set_depth_format(_depthImage.imageFormat);
-
-    // Finally build the pipeline
-    _trianglePipeline = pipelineBuilder.build_pipeline(_device);
-
-    // Clean structures
-    vkDestroyShaderModule(_device, triangleFragShader, nullptr);
-    vkDestroyShaderModule(_device, triangleVertexShader, nullptr);
-
-    _mainDeletionQueue.push_function([&]() {
-        vkDestroyPipelineLayout(_device, _trianglePipelineLayout, nullptr);
-        vkDestroyPipeline(_device, _trianglePipeline, nullptr);
-        });
-}
-
 void VulkanEngine::init_pipelines()
 {
     // Compute pipelines
     init_background_pipelines();
 
     // Graphics pipelines
-    //init_triangle_pipeline();
     init_mesh_pipeline();
     metalRoughMaterial.build_pipelines(this);
 }
@@ -694,16 +612,6 @@ void VulkanEngine::draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView)
 
 void VulkanEngine::draw_background(VkCommandBuffer cmd)
 {
-    /*//make a clear-color from frame number. This will flash with a 120 frame period.
-    VkClearColorValue clearValue;
-    float flash = std::abs(std::sin(_frameNumber / 120.f));
-    clearValue = { { 0.0f, 0.0f, flash, 1.0f } };
-
-    VkImageSubresourceRange clearRange = vkinit::image_subresource_range(VK_IMAGE_ASPECT_COLOR_BIT);
-
-    //clear image
-    vkCmdClearColorImage(cmd, _drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);*/
-
     ComputeEffect& effect = backfroundEffects[currentBackgroundEffect];
 
     // Bind the background compute pipeline
@@ -726,12 +634,8 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     VkRenderingAttachmentInfo depthAttachment = vkinit::depth_attachment_info(_depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
     VkRenderingInfo renderInfo = vkinit::rendering_info(/*_windowExtent*/ _drawExtent, &colorAttachment, &depthAttachment);
+    
     vkCmdBeginRendering(cmd, &renderInfo);
-
-    //vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _trianglePipeline);
-
-    // Launch a draw command to draw 3 vertices
-    //vkCmdDraw(cmd, 3, 1, 0, 0);
    
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _meshPipeline);
     
@@ -753,61 +657,6 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     scissor.extent.height = _drawExtent.height;
 
     vkCmdSetScissor(cmd, 0, 1, &scissor);
-    ////////////////////////////////////////////////////////
-    //allocate a new uniform buffer for the scene data
-    /*AllocatedBuffer gpuSceneDataBuffer = create_buffer(sizeof(GPUSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-    //add it to the deletion queue of this frame so it gets deleted once its been used
-    get_current_frame()._deletionQueue.push_function([=, this]() {
-        destroy_buffer(gpuSceneDataBuffer);
-        });
-
-    //write the buffer
-    GPUSceneData* sceneUniformData = (GPUSceneData*)gpuSceneDataBuffer.allocation->GetMappedData();
-    *sceneUniformData = sceneData;
-
-    //create a descriptor set that binds that buffer and update it
-    VkDescriptorSet globalDescriptor = get_current_frame()._frameDescriptors.allocate(_device, _gpuSceneDataDescriptorLayout);
-
-    DescriptorWriter writer;
-    writer.write_buffer(0, gpuSceneDataBuffer.buffer, sizeof(GPUSceneData), 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    writer.update_set(_device, globalDescriptor);*/
-    ///////////////////////////////////////////////////////////
-    //push_constants.vertexBuffer = rectangle.vertexBufferAddress;
-
-    //vkCmdPushConstants(cmd, _meshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &push_constants);
-    //vkCmdBindIndexBuffer(cmd, rectangle.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-    //vkCmdDrawIndexed(cmd, 6, 1, 0, 0, 0);
-    /*
-    //bind a texture
-    VkDescriptorSet imageSet = get_current_frame()._frameDescriptors.allocate(_device, _singleImageDescriptorLayout);
-    {
-        DescriptorWriter writer;
-        writer.write_image(0, _errorCheckerboardImage.imageView, _defaultSamplerNearest, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-
-        writer.update_set(_device, imageSet);
-    }
-
-    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _meshPipelineLayout, 0, 1, &imageSet, 0, nullptr);
-
-    GPUDrawPushConstants push_constants;
-    glm::mat4 view = glm::translate(glm::vec3{ 0,0,-5 });
-    // camera projection
-    glm::mat4 projection = glm::perspective(glm::radians(70.f), (float)_drawExtent.width / (float)_drawExtent.height, 10000.f, 0.1f);
-
-    // invert the Y direction on projection matrix so that we are more similar
-    // to opengl and gltf axis
-    projection[1][1] *= -1;
-
-    push_constants.worldMatrix = projection * view;
-
-    push_constants.vertexBuffer = testMeshes[2]->meshBuffers.vertexBufferAddress;
-
-    vkCmdPushConstants(cmd, _meshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &push_constants);
-    vkCmdBindIndexBuffer(cmd, testMeshes[2]->meshBuffers.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-    vkCmdDrawIndexed(cmd, testMeshes[2]->surfaces[0].count, 1, testMeshes[2]->surfaces[0].startIndex, 0, 0);
-    */
 
     //allocate a new uniform buffer for the scene data
     AllocatedBuffer gpuSceneDataBuffer = create_buffer(sizeof(GPUSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
@@ -1017,10 +866,6 @@ void VulkanEngine::run()
  
             ImGui::InputFloat4("data1", reinterpret_cast<float*>(&selected.pushConstants.data1));
             ImGui::InputFloat4("data2", reinterpret_cast<float*>(&selected.pushConstants.data2));
-            //ImGui::InputFloat4("data3", reinterpret_cast<float*>(&selected.pushConstants.data3));
-            //ImGui::InputFloat4("data4", reinterpret_cast<float*>(&selected.pushConstants.data4));
-            //ImGui::ColorEdit4("Data1", reinterpret_cast<float*>(&selected.pushConstants.data1));
-            //ImGui::ColorEdit4("Data2", reinterpret_cast<float*>(&selected.pushConstants.data2));
         }
         ImGui::End();
 
@@ -1177,35 +1022,6 @@ void VulkanEngine::init_mesh_pipeline()
 
 void VulkanEngine::init_default_data() 
 {
-    /*std::array<Vertex, 4> rect_vertices;
-
-    rect_vertices[0].position = { 0.5,-0.5, 0 };
-    rect_vertices[1].position = { 0.5,0.5, 0 };
-    rect_vertices[2].position = { -0.5,-0.5, 0 };
-    rect_vertices[3].position = { -0.5,0.5, 0 };
-
-    rect_vertices[0].color = { 0,0, 0,1 };
-    rect_vertices[1].color = { 0.5,0.5,0.5 ,1 };
-    rect_vertices[2].color = { 1,0, 0,1 };
-    rect_vertices[3].color = { 0,1, 0,1 };
-
-    std::array<uint32_t, 6> rect_indices;
-
-    rect_indices[0] = 0;
-    rect_indices[1] = 1;
-    rect_indices[2] = 2;
-
-    rect_indices[3] = 2;
-    rect_indices[4] = 1;
-    rect_indices[5] = 3;
-
-    rectangle = uploadMesh(rect_indices, rect_vertices);
-
-    //delete the rectangle data on engine shutdown
-    _mainDeletionQueue.push_function([&]() {
-        destroy_buffer(rectangle.indexBuffer);
-        destroy_buffer(rectangle.vertexBuffer);
-        });*/
     //3 default textures, white, grey, black. 1 pixel each
     uint32_t white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
     _whiteImage = create_image((void*)&white, VkExtent3D{ 1, 1, 1 }, VK_FORMAT_R8G8B8A8_UNORM,

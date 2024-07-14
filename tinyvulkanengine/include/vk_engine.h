@@ -221,11 +221,6 @@ public:
 	std::vector<ComputeEffect> backfroundEffects;
 	int currentBackgroundEffect{ 0 };
 
-	// Triangle pipeline
-	VkPipelineLayout _trianglePipelineLayout;
-	VkPipeline _trianglePipeline;
-	void init_triangle_pipeline();
-
 	// Creates mesh buffers and uploads them to the GPU
 	GPUMeshBuffers uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices);
 
