@@ -70,6 +70,26 @@ struct GPUSceneData {
     glm::vec4 sunlightColor;
 };
 
+// Holds some of the properties of materials
+enum class MaterialPass :uint8_t {
+    MainColor,
+    Transparent,
+    Other
+};
+
+// Holds the pipeline and layout for a material
+struct MaterialPipeline {
+    VkPipeline pipeline;
+    VkPipelineLayout layout;
+};
+
+// Holds objects needed to render a material
+struct MaterialInstance {
+    MaterialPipeline* pipeline;
+    VkDescriptorSet materialSet;
+    MaterialPass passType;
+};
+
 #define VK_CHECK(x)                                                     \
     do {                                                                \
         VkResult err = x;                                               \
