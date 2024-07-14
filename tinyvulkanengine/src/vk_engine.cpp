@@ -302,7 +302,7 @@ void VulkanEngine::init_sync_structures()
 void VulkanEngine::init_descriptors()
 {
     //create a descriptor pool that will hold 10 sets with 1 image each
-    std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> sizes =
+    std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
     {
         { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
         { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
@@ -339,14 +339,14 @@ void VulkanEngine::init_descriptors()
 
     for (int i = 0; i < FRAME_OVERLAP; i++) {
         // create a descriptor pool
-        std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> frame_sizes = {
+        std::vector<DescriptorAllocator::PoolSizeRatio> frame_sizes = {
             { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
             { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3 },
             { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 },
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 },
         };
 
-        _frames[i]._frameDescriptors = DescriptorAllocatorGrowable{};
+        _frames[i]._frameDescriptors = DescriptorAllocator{};
         _frames[i]._frameDescriptors.init_pool(_device, 1000, frame_sizes);
 
         _mainDeletionQueue.push_function([&, i]() {
@@ -1257,7 +1257,7 @@ void GLTFMetallic_Roughness::build_pipelines(VulkanEngine* engine)
     
 }
 
-MaterialInstance GLTFMetallic_Roughness::write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocatorGrowable& descriptorAllocator)
+MaterialInstance GLTFMetallic_Roughness::write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocator& descriptorAllocator)
 {
     MaterialInstance matData;
     matData.passType = pass;

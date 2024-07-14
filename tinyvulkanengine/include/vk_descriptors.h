@@ -20,28 +20,7 @@ struct DescriptorLayoutBuilder
 };
 
 // Abstraction to allocate a VkDescriptorSet from a VkDescriptorPool
-struct DescriptorAllocator 
-{
-    // Size of the VkDescriptorPool
-    struct PoolSizeRatio {
-        VkDescriptorType type;
-        float ratio;
-    };
-
-    VkDescriptorPool pool;
-
-    // Creates the VkDescriptorPool according to the PoolSizeRatio
-    void init_pool(VkDevice device, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios);
-    // Does not delete the VkDescriptorPool, only the sets and resets the pool
-    void clear_descriptors(VkDevice device);
-    // Destroys the VkDescriptorPool
-    void destroy_pool(VkDevice device);
-    // Allocates VkDescriptorSet(s) from the pool
-    VkDescriptorSet allocate(VkDevice device, VkDescriptorSetLayout layout);
-};
-
-// Abstraction to allocate a VkDescriptorSet from a VkDescriptorPool
-struct DescriptorAllocatorGrowable {
+struct DescriptorAllocator {
 public:
     // Size of the VkDescriptorPool
     struct PoolSizeRatio {

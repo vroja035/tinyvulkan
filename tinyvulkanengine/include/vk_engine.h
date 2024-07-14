@@ -43,7 +43,7 @@ struct FrameData {
 	// Deletion Queue for each frame in flight
 	DeletionQueue _deletionQueue;
 	// Global data descriptor for every frame
-	DescriptorAllocatorGrowable _frameDescriptors;
+	DescriptorAllocator _frameDescriptors;
 };
 // Double-buffering
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -115,7 +115,7 @@ struct GLTFMetallic_Roughness {
 	void build_pipelines(VulkanEngine* engine);
 	void clear_resources(VkDevice device);
 
-	MaterialInstance write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocatorGrowable& descriptorAllocator);
+	MaterialInstance write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocator& descriptorAllocator);
 };
 
 class VulkanEngine {
@@ -201,7 +201,7 @@ public:
 	VkQueue _graphicsQueue;
 	uint32_t _graphicsQueueFamily;
 
-	DescriptorAllocatorGrowable globalDescriptorAllocator;
+	DescriptorAllocator globalDescriptorAllocator;
 
 	VkDescriptorSet _drawImageDescriptors;
 	VkDescriptorSetLayout _drawImageDescriptorLayout;
