@@ -7,6 +7,8 @@
 #include <filesystem>
 #include "vk_descriptors.h"
 
+#include <fastgltf/tools.hpp>
+
 struct GLTFMaterial {
     MaterialInstance data;
 };
@@ -58,4 +60,4 @@ private:
 };
 
 std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine, std::string_view filePath);
-//std::optional<AllocatedImage> load_image(VulkanEngine* engine, fastgltf::Asset& asset, fastgltf::Image& image);
+std::optional<AllocatedImage> load_image(VulkanEngine* engine, fastgltf::Asset& asset, fastgltf::Image& image);
