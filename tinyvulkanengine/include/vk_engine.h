@@ -7,6 +7,7 @@
 
 #include "vk_descriptors.h"
 #include "vk_loader.h"
+#include "camera.h"
 
 // Handles the cleanup of objects
 struct DeletionQueue
@@ -125,6 +126,9 @@ public:
 
 	// VMA memory allocator object
 	VmaAllocator _allocator;
+
+	// Camera object
+	Camera mainCamera;
 
 	// Creates a buffer
 	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);
