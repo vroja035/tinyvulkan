@@ -69,10 +69,18 @@ void VulkanEngine::init()
     _isInitialized = true;
 
     mainCamera.velocity = glm::vec3(0.f);
-    mainCamera.position = glm::vec3(0, 0, 5);
+    //mainCamera.position = glm::vec3(0, 0, 5);
+    mainCamera.position = glm::vec3(30.f, -00.f, -085.f);
 
     mainCamera.pitch = 0;
     mainCamera.yaw = 0;
+
+    std::string structurePath = { "..\\assets\\structure.glb" };
+    auto structureFile = loadGltf(this, structurePath);
+
+    assert(structureFile.has_value());
+
+    loadedScenes["structure"] = *structureFile;
 }
 
 void VulkanEngine::init_vulkan()
@@ -564,6 +572,7 @@ void VulkanEngine::cleanup()
         // destroy resources in the opposite order they were created
         // make sure the gpu has stopped doing its things
         vkDeviceWaitIdle(_device);
+        loadedScenes.clear();
 
         for (int i = 0; i < FRAME_OVERLAP; i++) {
 
@@ -1099,7 +1108,7 @@ void VulkanEngine::init_default_data()
 
     defaultData = metalRoughMaterial.write_material(_device, MaterialPass::MainColor, materialResources, globalDescriptorAllocator);
 
-    testMeshes = loadGltfMeshes(this, "..\\assets\\basicmesh.glb").value();
+    testMeshes = loadGltfMeshes_DEPRECATED(this, "..\\assets\\basicmesh.glb").value();
 
     for (auto& m : testMeshes) {
         std::shared_ptr<MeshNode> newNode = std::make_shared<MeshNode>();
@@ -1332,6 +1341,8 @@ void VulkanEngine::update_scene()
 
         loadedNodes["Cube"]->Draw(translation * scale, mainDrawContext);
     }
+
+    loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
 
     // Some default lighting parameters
     sceneData.ambientColor = glm::vec4(.1f);
