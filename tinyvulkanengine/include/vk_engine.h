@@ -246,6 +246,10 @@ public:
 
 	DrawContext mainDrawContext;
 	std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> loadedScenes;
+	//std::vector<std::string> scenesToRender = {};
+	bool bShouldRenderStructure = false;
+	bool bShouldRenderSponza = false;
+	
 
 	void update_scene();
 private:

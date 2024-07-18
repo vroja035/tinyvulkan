@@ -968,7 +968,7 @@ void VulkanEngine::run()
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        if (ImGui::Begin("background")) {
+        if (ImGui::Begin("Background")) {
             ImGui::SliderFloat("Render Scale", &renderScale, 0.3f, 1.f);
 
             // Grab selected effect
@@ -985,12 +985,18 @@ void VulkanEngine::run()
         }
         ImGui::End();
 
-        if (ImGui::Begin("stats")) {
+        if (ImGui::Begin("Stats")) {
             ImGui::Text("Frametime %f ms", stats.frametime);
             ImGui::Text("Draw Time %f ms", stats.mesh_draw_time);
             ImGui::Text("Update Time %f ms", stats.scene_update_time);
             ImGui::Text("Triangles %i", stats.triangle_count);
             ImGui::Text("Draws %i", stats.drawcall_count);
+        }
+        ImGui::End();
+
+        if (ImGui::Begin("Scene")) {
+            ImGui::Checkbox("Structure", &bShouldRenderStructure);
+            ImGui::Checkbox("Sponza", &bShouldRenderSponza);
         }
         ImGui::End();
 
@@ -1373,12 +1379,19 @@ void VulkanEngine::update_scene()
 
     mainDrawContext.OpaqueSurfaces.clear();
     mainDrawContext.TransparentSurfaces.clear();
+    
+    if (bShouldRenderStructure)
+    {
+        loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+    }
 
-    //loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
-    loadedScenes["sponza"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
-
+    if (bShouldRenderSponza)
+    {
+        loadedScenes["sponza"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+    }
+    
     // Some default lighting parameters
-    sceneData.ambientColor = glm::vec4(.1f);
+    sceneData.ambientColor = glm::vec4(.5f);
     sceneData.sunlightColor = glm::vec4(1.f);
     sceneData.sunlightDirection = glm::vec4(0, 1, 0.5, 1.f);
 
