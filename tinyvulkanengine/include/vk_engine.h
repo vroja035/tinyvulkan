@@ -120,6 +120,14 @@ struct GLTFMetallic_Roughness {
 	MaterialInstance write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocator& descriptorAllocator);
 };
 
+struct EngineStats {
+	float frametime;
+	int triangle_count;
+	int drawcall_count;
+	float scene_update_time;
+	float mesh_draw_time;
+};
+
 class VulkanEngine {
 public:
 	// Main deletion queue for global objects
@@ -130,6 +138,9 @@ public:
 
 	// Camera object
 	Camera mainCamera;
+
+	// Engine stats
+	EngineStats stats;
 
 	// Creates a buffer
 	AllocatedBuffer create_buffer(size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);

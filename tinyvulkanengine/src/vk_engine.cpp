@@ -26,7 +26,7 @@
 #include <thread>
 #include <cassert>
 
-constexpr bool bUseValidationLayers = true;
+constexpr bool bUseValidationLayers = false;
 VulkanEngine* loadedEngine = nullptr;
 
 VulkanEngine& VulkanEngine::Get() { return *loadedEngine; }
@@ -644,6 +644,12 @@ void VulkanEngine::draw_background(VkCommandBuffer cmd)
 
 void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
 {
+    //reset counters
+    stats.drawcall_count = 0;
+    stats.triangle_count = 0;
+    //begin clock
+    auto start = std::chrono::system_clock::now();
+
     // Begin a render pass  connected to our draw image
     VkRenderingAttachmentInfo colorAttachment = vkinit::attachment_info(_drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_GENERAL);
     VkRenderingAttachmentInfo depthAttachment = vkinit::depth_attachment_info(_depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
@@ -705,6 +711,10 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
         vkCmdPushConstants(cmd, draw.material->pipeline->layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &pushConstants);
 
         vkCmdDrawIndexed(cmd, draw.indexCount, 1, draw.firstIndex, 0, 0);
+
+        //add counters for triangles and draws
+        stats.drawcall_count++;
+        stats.triangle_count += draw.indexCount / 3;
         };
 
     for (auto& surface : mainDrawContext.OpaqueSurfaces) {
@@ -716,6 +726,12 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     }
 
     vkCmdEndRendering(cmd);
+
+    auto end = std::chrono::system_clock::now();
+
+    //convert to microseconds (integer), and then come back to miliseconds
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    stats.mesh_draw_time = elapsed.count() / 1000.f;
 }
 
 void VulkanEngine::draw()
@@ -837,6 +853,9 @@ void VulkanEngine::run()
 
     // main loop
     while (!bQuit) {
+        //begin clock
+        auto start = std::chrono::system_clock::now();
+
         // Handle events on queue
         while (SDL_PollEvent(&e) != 0) {
             // close the window when user alt-f4s or clicks the X button
@@ -891,10 +910,26 @@ void VulkanEngine::run()
         }
         ImGui::End();
 
+        if (ImGui::Begin("stats")) {
+            ImGui::Text("Frametime %f ms", stats.frametime);
+            ImGui::Text("Draw Time %f ms", stats.mesh_draw_time);
+            ImGui::Text("Update Time %f ms", stats.scene_update_time);
+            ImGui::Text("Triangles %i", stats.triangle_count);
+            ImGui::Text("Draws %i", stats.drawcall_count);
+        }
+        ImGui::End();
+
         //make imgui calculate internal draw structures
         ImGui::Render();
 
         draw();
+
+        // get clock again, compare with start clock
+        auto end = std::chrono::system_clock::now();
+
+        //convert to microseconds (integer), and then come back to miliseconds
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        stats.frametime = elapsed.count() / 1000.f;
     }
 }
 
@@ -1341,6 +1376,9 @@ void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& ctx)
 
 void VulkanEngine::update_scene()
 {
+    //begin clock
+    auto start = std::chrono::system_clock::now();
+
     mainDrawContext.OpaqueSurfaces.clear();
     mainDrawContext.TransparentSurfaces.clear();
     /*// Monkey head mesh
@@ -1377,4 +1415,9 @@ void VulkanEngine::update_scene()
     sceneData.proj = projection;
     sceneData.viewproj = projection * view;
 
+    auto end = std::chrono::system_clock::now();
+
+    //convert to microseconds (integer), and then come back to miliseconds
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    stats.scene_update_time = elapsed.count() / 1000.f;
 }
