@@ -35,8 +35,6 @@ struct MeshAsset {
 //forward declaration
 class VulkanEngine;
 
-std::optional<std::vector<std::shared_ptr<MeshAsset>>> loadGltfMeshes_DEPRECATED(VulkanEngine* engine, std::filesystem::path filePath);
-
 // Contains all resources needed forhandling a GLTF file
 struct LoadedGLTF : public IRenderable {
 
