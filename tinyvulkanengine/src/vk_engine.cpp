@@ -81,6 +81,13 @@ void VulkanEngine::init()
     assert(structureFile.has_value());
 
     loadedScenes["structure"] = *structureFile;
+
+    std::string sponzaPath = { "..\\assets\\sponza\\sponza.gltf" };
+    auto sponzaFile = loadGltf(this, sponzaPath);
+
+    assert(sponzaFile.has_value());
+
+    loadedScenes["sponza"] = *sponzaFile;
 }
 
 void VulkanEngine::init_vulkan()
@@ -1367,7 +1374,8 @@ void VulkanEngine::update_scene()
     mainDrawContext.OpaqueSurfaces.clear();
     mainDrawContext.TransparentSurfaces.clear();
 
-    loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+    //loadedScenes["structure"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
+    loadedScenes["sponza"]->Draw(glm::mat4{ 1.f }, mainDrawContext);
 
     // Some default lighting parameters
     sceneData.ambientColor = glm::vec4(.1f);
