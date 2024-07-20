@@ -1,22 +1,22 @@
 
 # Add source to this project's executable.
 add_executable (tinyvulkanengine 
-  src/main.cpp
-  include/vk_types.h
-  src/vk_initializers.cpp
-  include/vk_initializers.h
-  include/vk_images.h
-  src/vk_images.cpp 
-  include/vk_descriptors.h
-  src/vk_descriptors.cpp
-  include/vk_pipelines.h
-  src/vk_pipelines.cpp
-  include/vk_engine.h
-  src/vk_engine.cpp
-  include/vk_loader.h
-  src/vk_loader.cpp
-  src/camera.cpp
-  include/camera.h
+  "src/main.cpp"
+  "include/tv_types.h"
+  "src/tv_initializers.cpp"
+  "include/tv_initializers.h"
+  "include/tv_images.h"
+  "src/tv_images.cpp" 
+  "include/tv_descriptors.h"
+  "src/tv_descriptors.cpp"
+  "include/tv_pipelines.h"
+  "src/tv_pipelines.cpp"
+  "include/tv_engine.h"
+  "src/tv_engine.cpp"
+  "include/tv_loader.h"
+  "src/tv_loader.cpp"
+  "src/tv_camera.cpp"
+  "include/tv_camera.h"
 )
 
 set_property(TARGET tinyvulkanengine PROPERTY CXX_STANDARD 20)

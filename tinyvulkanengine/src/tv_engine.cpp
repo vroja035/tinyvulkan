@@ -1,10 +1,10 @@
 ﻿//> includes
-#include "vk_engine.h"
+#include "tv_engine.h"
 
-#include <vk_initializers.h>
-#include "vk_images.h"
-#include "vk_pipelines.h"
-#include <vk_types.h>
+#include <tv_initializers.h>
+#include "tv_images.h"
+#include "tv_pipelines.h"
+#include <tv_types.h>
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -27,10 +27,10 @@
 #include <cassert>
 
 constexpr bool bUseValidationLayers = false;
-VulkanEngine* loadedEngine = nullptr;
+TinyVulkan* loadedEngine = nullptr;
 
-VulkanEngine& VulkanEngine::Get() { return *loadedEngine; }
-void VulkanEngine::init()
+TinyVulkan& TinyVulkan::Get() { return *loadedEngine; }
+void TinyVulkan::init()
 {
     // only one engine initialization is allowed with the application.
     assert(loadedEngine == nullptr);
@@ -42,7 +42,7 @@ void VulkanEngine::init()
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
     _window = SDL_CreateWindow(
-        "Vulkan Engine",
+        "tinyvulkan",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         _windowExtent.width,
@@ -70,7 +70,7 @@ void VulkanEngine::init()
 
     mainCamera.velocity = glm::vec3(0.f);
     //mainCamera.position = glm::vec3(0, 0, 5);
-    mainCamera.position = glm::vec3(30.f, -00.f, -085.f);
+    mainCamera.position = glm::vec3(30.f, -00.f, 085.f);
 
     mainCamera.pitch = 0;
     mainCamera.yaw = 0;
@@ -90,7 +90,7 @@ void VulkanEngine::init()
     loadedScenes["sponza"] = *sponzaFile;
 }
 
-void VulkanEngine::init_vulkan()
+void TinyVulkan::init_vulkan()
 {
     vkb::InstanceBuilder builder;
 
@@ -158,7 +158,7 @@ void VulkanEngine::init_vulkan()
         });
 }
 
-void VulkanEngine::create_swapchain(uint32_t width, uint32_t height)
+void TinyVulkan::create_swapchain(uint32_t width, uint32_t height)
 {
     vkb::SwapchainBuilder swapchainBuilder{ _chosenGPU,_device,_surface };
 
@@ -181,7 +181,7 @@ void VulkanEngine::create_swapchain(uint32_t width, uint32_t height)
     _swapchainImageViews = vkbSwapchain.get_image_views().value();
 }
 
-void VulkanEngine::resize_swapchain()
+void TinyVulkan::resize_swapchain()
 {
     vkDeviceWaitIdle(_device);
 
@@ -197,7 +197,7 @@ void VulkanEngine::resize_swapchain()
     resize_requested = false;
 }
 
-void VulkanEngine::init_swapchain()
+void TinyVulkan::init_swapchain()
 {
     create_swapchain(_windowExtent.width, _windowExtent.height);
 
@@ -260,7 +260,7 @@ void VulkanEngine::init_swapchain()
         });
 }
 
-void VulkanEngine::destroy_swapchain()
+void TinyVulkan::destroy_swapchain()
 {
     // destroying the swapchain obj will delete the images it holds
     vkDestroySwapchainKHR(_device, _swapchain, nullptr);
@@ -272,7 +272,7 @@ void VulkanEngine::destroy_swapchain()
     }
 }
 
-void VulkanEngine::init_commands()
+void TinyVulkan::init_commands()
 {
     // Create a command pool for commands submitted to the graphics queue.
     // We also want the pool to allow for resetting of individual command buffers
@@ -300,7 +300,7 @@ void VulkanEngine::init_commands()
         });
 }
 
-void VulkanEngine::init_sync_structures()
+void TinyVulkan::init_sync_structures()
 {
     // create syncronization structures
     // one fence to control when the gpu has finished rendering the frame,
@@ -320,7 +320,7 @@ void VulkanEngine::init_sync_structures()
     _mainDeletionQueue.push_function([=]() { vkDestroyFence(_device, _immFence, nullptr); });
 }
 
-void VulkanEngine::init_descriptors()
+void TinyVulkan::init_descriptors()
 {
     //create a descriptor pool that will hold 10 sets with 1 image each
     std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
@@ -385,7 +385,7 @@ void VulkanEngine::init_descriptors()
         });
 }
 
-void VulkanEngine::init_background_pipelines()
+void TinyVulkan::init_background_pipelines()
 {
     // Create pipeline layout
     VkPipelineLayoutCreateInfo computeLayout{};
@@ -473,7 +473,7 @@ void VulkanEngine::init_background_pipelines()
         });
 }
 
-void VulkanEngine::init_pipelines()
+void TinyVulkan::init_pipelines()
 {
     // Compute pipelines
     init_background_pipelines();
@@ -482,7 +482,7 @@ void VulkanEngine::init_pipelines()
     metalRoughMaterial.build_pipelines(this);
 }
 
-void VulkanEngine::init_imgui()
+void TinyVulkan::init_imgui()
 {
     // 1: create descriptor pool for IMGUI
     //  the size of the pool is very oversize, but it's copied from imgui demo
@@ -547,7 +547,7 @@ void VulkanEngine::init_imgui()
         });
 }
 
-void VulkanEngine::immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function)
+void TinyVulkan::immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function)
 {
     VK_CHECK(vkResetFences(_device, 1, &_immFence));
     VK_CHECK(vkResetCommandBuffer(_immCommandBuffer, 0));
@@ -572,7 +572,7 @@ void VulkanEngine::immediate_submit(std::function<void(VkCommandBuffer cmd)>&& f
     VK_CHECK(vkWaitForFences(_device, 1, &_immFence, true, 9999999999));
 }
 
-void VulkanEngine::cleanup()
+void TinyVulkan::cleanup()
 {
     if (_isInitialized) {
         // destroy resources in the opposite order they were created
@@ -652,7 +652,7 @@ bool is_visible(const RenderObject& obj, const glm::mat4& viewproj) {
     }
 }
 
-void VulkanEngine::draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView)
+void TinyVulkan::draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView)
 {
     VkRenderingAttachmentInfo colorAttachment = vkinit::attachment_info(targetImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
     VkRenderingInfo renderInfo = vkinit::rendering_info(_swapchainExtent, &colorAttachment, nullptr);
@@ -664,7 +664,7 @@ void VulkanEngine::draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView)
     vkCmdEndRendering(cmd);
 }
 
-void VulkanEngine::draw_background(VkCommandBuffer cmd)
+void TinyVulkan::draw_background(VkCommandBuffer cmd)
 {
     ComputeEffect& effect = backfroundEffects[currentBackgroundEffect];
 
@@ -681,7 +681,7 @@ void VulkanEngine::draw_background(VkCommandBuffer cmd)
     vkCmdDispatch(cmd, std::ceil(_drawExtent.width / 16.0), std::ceil(_drawExtent.height / 16.0), 1);
 }
 
-void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
+void TinyVulkan::draw_geometry(VkCommandBuffer cmd)
 {
     //reset counters
     stats.drawcall_count = 0;
@@ -809,7 +809,7 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd)
     stats.mesh_draw_time = elapsed.count() / 1000.f;
 }
 
-void VulkanEngine::draw()
+void TinyVulkan::draw()
 {
     _drawExtent.height = std::min(_swapchainExtent.height, _drawImage.imageExtent.height) * renderScale;
     _drawExtent.width = std::min(_swapchainExtent.width, _drawImage.imageExtent.width) * renderScale;
@@ -921,7 +921,7 @@ void VulkanEngine::draw()
     _frameNumber++;
 }
 
-void VulkanEngine::run()
+void TinyVulkan::run()
 {
     SDL_Event e;
     bool bQuit = false;
@@ -1014,7 +1014,7 @@ void VulkanEngine::run()
     }
 }
 
-AllocatedBuffer VulkanEngine::create_buffer(size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage)
+AllocatedBuffer TinyVulkan::create_buffer(size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage)
 {
     // allocate buffer
     VkBufferCreateInfo bufferInfo = { .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -1035,12 +1035,12 @@ AllocatedBuffer VulkanEngine::create_buffer(size_t allocSize, VkBufferUsageFlags
     return newBuffer;
 }
 
-void VulkanEngine::destroy_buffer(const AllocatedBuffer& buffer)
+void TinyVulkan::destroy_buffer(const AllocatedBuffer& buffer)
 {
     vmaDestroyBuffer(_allocator, buffer.buffer, buffer.allocation);
 }
 
-GPUMeshBuffers VulkanEngine::uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices)
+GPUMeshBuffers TinyVulkan::uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices)
 {
     const size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
     const size_t indexBufferSize = indices.size() * sizeof(uint32_t);
@@ -1090,7 +1090,7 @@ GPUMeshBuffers VulkanEngine::uploadMesh(std::span<uint32_t> indices, std::span<V
     return newSurface;
 }
 
-void VulkanEngine::init_default_data() 
+void TinyVulkan::init_default_data() 
 {
     //3 default textures, white, grey, black. 1 pixel each
     uint32_t white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
@@ -1162,7 +1162,7 @@ void VulkanEngine::init_default_data()
     defaultData = metalRoughMaterial.write_material(_device, MaterialPass::MainColor, materialResources, globalDescriptorAllocator);
 }
 
-AllocatedImage VulkanEngine::create_image(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped)
+AllocatedImage TinyVulkan::create_image(VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped)
 {
     AllocatedImage newImage;
     newImage.imageFormat = format;
@@ -1196,7 +1196,7 @@ AllocatedImage VulkanEngine::create_image(VkExtent3D size, VkFormat format, VkIm
     return newImage;
 }
 
-AllocatedImage VulkanEngine::create_image(void* data, VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped)
+AllocatedImage TinyVulkan::create_image(void* data, VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped)
 {
     size_t data_size = size.depth * size.width * size.height * 4;
     AllocatedBuffer uploadbuffer = create_buffer(data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
@@ -1235,13 +1235,13 @@ AllocatedImage VulkanEngine::create_image(void* data, VkExtent3D size, VkFormat 
     return new_image;
 }
 
-void VulkanEngine::destroy_image(const AllocatedImage& img)
+void TinyVulkan::destroy_image(const AllocatedImage& img)
 {
     vkDestroyImageView(_device, img.imageView, nullptr);
     vmaDestroyImage(_allocator, img.image, img.allocation);
 }
 
-void GLTFMetallic_Roughness::build_pipelines(VulkanEngine* engine)
+void GLTFMetallic_Roughness::build_pipelines(TinyVulkan* engine)
 {
     VkShaderModule meshFragShader;
     if (!vkutil::load_shader_module("../shaders/mesh.frag.spv", engine->_device, &meshFragShader)) {
@@ -1372,7 +1372,7 @@ void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& ctx)
     Node::Draw(topMatrix, ctx);
 }
 
-void VulkanEngine::update_scene()
+void TinyVulkan::update_scene()
 {
     //begin clock
     auto start = std::chrono::system_clock::now();

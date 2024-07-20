@@ -1,4 +1,4 @@
-#include <camera.h>
+#include <tv_camera.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>

@@ -1,9 +1,9 @@
-﻿#include <vk_loader.h>
+﻿#include <tv_loader.h>
 #include "stb_image.h"
 #include <iostream>
-#include "vk_engine.h"
-#include "vk_initializers.h"
-#include "vk_types.h"
+#include "tv_engine.h"
+#include "tv_initializers.h"
+#include "tv_types.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -44,7 +44,7 @@ VkSamplerMipmapMode extract_mipmap_mode(fastgltf::Filter filter)
     }
 }
 
-std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine, std::string_view filePath)
+std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(TinyVulkan* engine, std::string_view filePath)
 {
     //fmt::print("Loading GLTF: {}", filePath);
     printf("Loading GLTF: %s\n", std::string(filePath).c_str());
@@ -358,7 +358,7 @@ std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine, std::s
 
 }
 
-std::optional<AllocatedImage> load_image(VulkanEngine* engine, fastgltf::Asset& asset, fastgltf::Image& image)
+std::optional<AllocatedImage> load_image(TinyVulkan* engine, fastgltf::Asset& asset, fastgltf::Image& image)
 {
     AllocatedImage newImage{};
 

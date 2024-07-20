@@ -3,11 +3,11 @@
 */
 #pragma once
 
-#include <vk_types.h>
+#include <tv_types.h>
 
-#include "vk_descriptors.h"
-#include "vk_loader.h"
-#include "camera.h"
+#include "tv_descriptors.h"
+#include "tv_loader.h"
+#include "tv_camera.h"
 
 // Handles the cleanup of objects
 struct DeletionQueue
@@ -114,7 +114,7 @@ struct GLTFMetallic_Roughness {
 
 	DescriptorWriter writer;
 
-	void build_pipelines(VulkanEngine* engine);
+	void build_pipelines(TinyVulkan* engine);
 	void clear_resources(VkDevice device);
 
 	MaterialInstance write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocator& descriptorAllocator);
@@ -128,7 +128,7 @@ struct EngineStats {
 	float mesh_draw_time;
 };
 
-class VulkanEngine {
+class TinyVulkan {
 public:
 	// Main deletion queue for global objects
 	DeletionQueue _mainDeletionQueue;
@@ -180,7 +180,7 @@ public:
 
 	struct SDL_Window* _window{ nullptr }; //forward declaration
 
-	static VulkanEngine& Get();
+	static TinyVulkan& Get();
 
 	// Initializes everything in the engine
 	void init();

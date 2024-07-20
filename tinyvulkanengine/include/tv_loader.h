@@ -2,10 +2,10 @@
 	GLTF loading logic.
 */
 #pragma once
-#include <vk_types.h>
+#include <tv_types.h>
 #include <unordered_map>
 #include <filesystem>
-#include "vk_descriptors.h"
+#include "tv_descriptors.h"
 
 #include <fastgltf/tools.hpp>
 
@@ -33,7 +33,7 @@ struct MeshAsset {
     GPUMeshBuffers meshBuffers;
 };
 //forward declaration
-class VulkanEngine;
+class TinyVulkan;
 
 // Contains all resources needed forhandling a GLTF file
 struct LoadedGLTF : public IRenderable {
@@ -53,7 +53,7 @@ struct LoadedGLTF : public IRenderable {
 
     AllocatedBuffer materialDataBuffer;
 
-    VulkanEngine* creator;
+    TinyVulkan* creator;
 
     ~LoadedGLTF() { clearAll(); };
 
@@ -64,5 +64,5 @@ private:
     void clearAll();
 };
 
-std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(VulkanEngine* engine, std::string_view filePath);
-std::optional<AllocatedImage> load_image(VulkanEngine* engine, fastgltf::Asset& asset, fastgltf::Image& image);
+std::optional<std::shared_ptr<LoadedGLTF>> loadGltf(TinyVulkan* engine, std::string_view filePath);
+std::optional<AllocatedImage> load_image(TinyVulkan* engine, fastgltf::Asset& asset, fastgltf::Image& image);

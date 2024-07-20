@@ -2,11 +2,11 @@
 	Entry point for the application.
 */
 
-#include <vk_engine.h>
+#include <tv_engine.h>
 
 int main(int argc, char* argv[])
 {
-	VulkanEngine engine;
+	TinyVulkan engine;
 
 	engine.init();	
 	
