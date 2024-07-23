@@ -38,9 +38,7 @@ void TinyVulkan::init()
 
     // We initialize SDL and create a window with it.
     SDL_Init(SDL_INIT_VIDEO);
-
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
-
     _window = SDL_CreateWindow(
         "tinyvulkan",
         SDL_WINDOWPOS_UNDEFINED,
@@ -50,24 +48,18 @@ void TinyVulkan::init()
         window_flags);
 
     init_vulkan();
-
     init_swapchain();
-
     init_commands();
-
     init_sync_structures();
-
     init_descriptors();
-
     init_pipelines();
-
     init_imgui();
-
     init_default_data();
 
-    // everything went fine
+    // Everything went fine
     _isInitialized = true;
 
+    // Default values for camera
     mainCamera.velocity = glm::vec3(0.f);
     //mainCamera.position = glm::vec3(0, 0, 5);
     mainCamera.position = glm::vec3(30.f, -00.f, 085.f);
@@ -75,52 +67,48 @@ void TinyVulkan::init()
     mainCamera.pitch = 0;
     mainCamera.yaw = 0;
 
+    // Scene loading
     std::string structurePath = { "..\\assets\\structure.glb" };
     auto structureFile = loadGltf(this, structurePath);
-
     assert(structureFile.has_value());
-
     loadedScenes["structure"] = *structureFile;
 
     std::string sponzaPath = { "..\\assets\\sponza\\sponza.gltf" };
     auto sponzaFile = loadGltf(this, sponzaPath);
-
     assert(sponzaFile.has_value());
-
     loadedScenes["sponza"] = *sponzaFile;
 }
 
 void TinyVulkan::init_vulkan()
 {
+    // Make the vulkan instance, with basic debug features
     vkb::InstanceBuilder builder;
-
-    // make the vulkan instance, with basic debug features
     auto inst_ret = builder.set_app_name("tinyvulkan")
         .request_validation_layers(bUseValidationLayers)
         .use_default_debug_messenger()
         .require_api_version(1, 3, 0)
         .build();
-
     vkb::Instance vkb_inst = inst_ret.value();
 
-    // grab the instance 
+    // Grab the instance 
     _instance = vkb_inst.instance;
     _debug_messenger = vkb_inst.debug_messenger;
 
+    // Creates rendering surface for the SDL window
     SDL_Vulkan_CreateSurface(_window, _instance, &_surface);
 
-    // vulkan 1.3 features
+    // Vulkan 1.3 features
     VkPhysicalDeviceVulkan13Features features{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
     features.dynamicRendering = true;
     features.synchronization2 = true;
 
-    // vulkan 1.2 features
+    // Vulkan 1.2 features
     VkPhysicalDeviceVulkan12Features features12{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
     features12.bufferDeviceAddress = true;
     features12.descriptorIndexing = true;
 
 
-    // use vkbootstrap to select a gpu. 
+    // Use vkbootstrap to select a gpu. 
     // We want a gpu that can write to the SDL surface and supports vulkan 1.3 with the correct features
     vkb::PhysicalDeviceSelector selector{ vkb_inst };
     vkb::PhysicalDevice physicalDevice = selector
@@ -131,21 +119,19 @@ void TinyVulkan::init_vulkan()
         .select()
         .value();
 
-
-    // create the final (logical) vulkan device
+    // Create the final (logical) vulkan device
     vkb::DeviceBuilder deviceBuilder{ physicalDevice };
-
     vkb::Device vkbDevice = deviceBuilder.build().value();
 
     // Get the VkDevice handle used in the rest of a vulkan application
     _device = vkbDevice.device;
     _chosenGPU = physicalDevice.physical_device;
 
-    // use vkbootstrap to get a Graphics queue
+    // Use vkbootstrap to get a Graphics queue
     _graphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
     _graphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
 
-    // initialize the memory allocator
+    // Initialize the memory allocator
     VmaAllocatorCreateInfo allocatorInfo = {};
     allocatorInfo.physicalDevice = _chosenGPU;
     allocatorInfo.device = _device;
@@ -153,6 +139,7 @@ void TinyVulkan::init_vulkan()
     allocatorInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     vmaCreateAllocator(&allocatorInfo, &_allocator);
 
+    // Push the memory allocator to the global deletion queue
     _mainDeletionQueue.push_function([&]() {
         vmaDestroyAllocator(_allocator);
         });
@@ -160,17 +147,16 @@ void TinyVulkan::init_vulkan()
 
 void TinyVulkan::create_swapchain(uint32_t width, uint32_t height)
 {
+    // Uses VKBootstraper to create swapchain
     vkb::SwapchainBuilder swapchainBuilder{ _chosenGPU,_device,_surface };
-
     _swapchainImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-
     vkb::Swapchain vkbSwapchain = swapchainBuilder
         //.use_default_format_selection()
         .set_desired_format(VkSurfaceFormatKHR{ .format = _swapchainImageFormat, .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR })
         //use vsync present mode
         .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR) //hard v-sync
         .set_desired_extent(width, height)
-        .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+        .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT) // render images to a separete img first
         .build()
         .value();
 
@@ -205,8 +191,6 @@ void TinyVulkan::init_swapchain()
     VkExtent3D drawImageExtent = {
         _windowExtent.width,
         _windowExtent.height,
-        //1920,
-        //1080,
         1
     };
 
@@ -227,7 +211,7 @@ void TinyVulkan::init_swapchain()
     rimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     rimg_allocinfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    // Allocate and create the image
+    // Allocate and create the draw image
     vmaCreateImage(_allocator, &rimg_info, &rimg_allocinfo, &_drawImage.image, &_drawImage.allocation, nullptr);
 
     // Build a image-view for the draw image to use for rendering
@@ -242,10 +226,10 @@ void TinyVulkan::init_swapchain()
 
     VkImageCreateInfo dimg_info = vkinit::image_create_info(_depthImage.imageFormat, depthImageUsages, drawImageExtent);
 
-    //allocate and create the image
+    // Allocate and create the depth image
     vmaCreateImage(_allocator, &dimg_info, &rimg_allocinfo, &_depthImage.image, &_depthImage.allocation, nullptr);
 
-    //build a image-view for the draw image to use for rendering
+    // Build a image-view for the depth image to use for rendering
     VkImageViewCreateInfo dview_info = vkinit::imageview_create_info(_depthImage.imageFormat, _depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     VK_CHECK(vkCreateImageView(_device, &dview_info, nullptr, &_depthImage.imageView));
@@ -302,10 +286,10 @@ void TinyVulkan::init_commands()
 
 void TinyVulkan::init_sync_structures()
 {
-    // create syncronization structures
-    // one fence to control when the gpu has finished rendering the frame,
-    // and 2 semaphores to syncronize rendering with swapchain
-    // we want the fence to start signalled so we can wait on it on the first frame
+    // Create syncronization structures
+    // One fence to control when the gpu has finished rendering the frame,
+    // And 2 semaphores to syncronize rendering with swapchain
+    // We want the fence to start signalled so we can wait on it on the first frame
     VkFenceCreateInfo fenceCreateInfo = vkinit::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
     VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info();
 
@@ -322,7 +306,6 @@ void TinyVulkan::init_sync_structures()
 
 void TinyVulkan::init_descriptors()
 {
-    //create a descriptor pool that will hold 10 sets with 1 image each
     std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
     {
         { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
@@ -331,7 +314,6 @@ void TinyVulkan::init_descriptors()
 
     globalDescriptorAllocator.init_pool(_device, 10, sizes);
 
-    //make the descriptor set layout for our compute draw
     {
         DescriptorLayoutBuilder builder;
         builder.add_binding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
@@ -340,17 +322,10 @@ void TinyVulkan::init_descriptors()
 
     {
         DescriptorLayoutBuilder builder;
-        builder.add_binding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-        _singleImageDescriptorLayout = builder.build(_device, VK_SHADER_STAGE_FRAGMENT_BIT);
-    }
-
-    {
-        DescriptorLayoutBuilder builder;
         builder.add_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
         _gpuSceneDataDescriptorLayout = builder.build(_device, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
     }
 
-    //allocate a descriptor set for our draw image
     _drawImageDescriptors = globalDescriptorAllocator.allocate(_device, _drawImageDescriptorLayout);
 
     DescriptorWriter writer;
@@ -359,7 +334,6 @@ void TinyVulkan::init_descriptors()
     writer.update_set(_device, _drawImageDescriptors);
 
     for (int i = 0; i < FRAME_OVERLAP; i++) {
-        // create a descriptor pool
         std::vector<DescriptorAllocator::PoolSizeRatio> frame_sizes = {
             { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
             { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3 },
@@ -375,17 +349,15 @@ void TinyVulkan::init_descriptors()
             });
     }
 
-    //make sure both the descriptor allocator and the new layout get cleaned up properly
     _mainDeletionQueue.push_function([&]() {
         globalDescriptorAllocator.destroy_pools(_device);
 
         vkDestroyDescriptorSetLayout(_device, _drawImageDescriptorLayout, nullptr);
         vkDestroyDescriptorSetLayout(_device, _gpuSceneDataDescriptorLayout, nullptr);
-        vkDestroyDescriptorSetLayout(_device, _singleImageDescriptorLayout, nullptr);
         });
 }
 
-void TinyVulkan::init_background_pipelines()
+void TinyVulkan::init_compute_pipelines()
 {
     // Create pipeline layout
     VkPipelineLayoutCreateInfo computeLayout{};
@@ -476,7 +448,7 @@ void TinyVulkan::init_background_pipelines()
 void TinyVulkan::init_pipelines()
 {
     // Compute pipelines
-    init_background_pipelines();
+    init_compute_pipelines();
 
     // Graphics pipelines
     metalRoughMaterial.build_pipelines(this);
@@ -484,9 +456,8 @@ void TinyVulkan::init_pipelines()
 
 void TinyVulkan::init_imgui()
 {
-    // 1: create descriptor pool for IMGUI
-    //  the size of the pool is very oversize, but it's copied from imgui demo
-    //  itself.
+    //  Create descriptor pool for IMGUI; The size of the pool is 
+    //  very oversized, but it's copied from imgui demo itself.
     VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
         { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },

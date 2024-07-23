@@ -114,9 +114,18 @@ struct GLTFMetallic_Roughness {
 
 	DescriptorWriter writer;
 
+	/*
+		Initializes the opaque and transparent pipelines.
+	*/
 	void build_pipelines(TinyVulkan* engine);
+	/*
+		Destroys the opaque and transparent pipelines.
+	*/
 	void clear_resources(VkDevice device);
-
+	/*
+		Selects opaque or transparent pipeline, allocates descriptor set, and writes it using
+		the image and buffer from MaterialResources.
+	*/
 	MaterialInstance write_material(VkDevice device, MaterialPass pass, const MaterialResources& resources, DescriptorAllocator& descriptorAllocator);
 };
 
@@ -166,8 +175,6 @@ public:
 	VkSampler _defaultSamplerLinear;
 	VkSampler _defaultSamplerNearest;
 
-	VkDescriptorSetLayout _singleImageDescriptorLayout;
-
 	MaterialInstance defaultData;
 	GLTFMetallic_Roughness metalRoughMaterial;
 	
@@ -182,7 +189,7 @@ public:
 
 	static TinyVulkan& Get();
 
-	// Initializes everything in the engine
+	// Initializes everything in the engine, creates SDL Window, and loads scenes
 	void init();
 
 	// Destroys resources in the opposite order they were created
@@ -229,7 +236,6 @@ public:
 	VkCommandBuffer _immCommandBuffer;
 	VkCommandPool _immCommandPool;
 
-
 	void immediate_submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
 	// Stores an array of compute pipelines
@@ -246,25 +252,59 @@ public:
 
 	DrawContext mainDrawContext;
 	std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> loadedScenes;
-	//std::vector<std::string> scenesToRender = {};
 	bool bShouldRenderStructure = false;
 	bool bShouldRenderSponza = false;
 	
 
 	void update_scene();
 private:
-
+	/*
+		Initializes Vulkan instance, creates the logical VkDevice, and initializes the
+		VMA memory allocator.
+	*/
 	void init_vulkan();
+	/*
+		Initializes swapchain and creates the draw and depth images.
+	*/
 	void init_swapchain();
-	void init_commands();
-	void init_sync_structures();
-	void init_descriptors();
-	void init_pipelines();
-	void init_background_pipelines();
-	void init_imgui();
-	void init_default_data();
-
+	/*
+		Creates a swapchain using VKBoostrapper.
+	*/
 	void create_swapchain(uint32_t width, uint32_t height);
+	/*
+		Destroys and rebuilds the swapchain when the window is resized.
+	*/
 	void resize_swapchain();
+	/*
+		Destroys swapchain object and its ImageView resources.
+	*/
 	void destroy_swapchain();
+	/*
+		Initializes command buffers for submitting commands to the graphics queue.
+	*/
+	void init_commands();
+	/*
+		Initializes fences and semaphores for synchronization. 
+	*/
+	void init_sync_structures();
+	/*
+		Initializes descriptor sets for binding to the shaders.
+	*/
+	void init_descriptors();
+	/*
+		Main function for initializing pipelines.
+	*/
+	void init_pipelines();
+	/*
+		Initializes the compute pipeline to generate a background effect.
+	*/
+	void init_compute_pipelines();
+	/*
+		Initializes the ImGUI library and its Vulkan-related parameters.
+	*/
+	void init_imgui();
+	/*
+		Initializes default values for textures and materials.
+	*/
+	void init_default_data();
 };
